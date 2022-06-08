@@ -17,6 +17,6 @@ fn main() {
     if result.is_ok() {
         println!("All good!");
     } else {
-        eprintln!("ERROR: {}", result.err().unwrap())
+        eprintln!("ERROR: {}", result.err().unwrap());
     }
 }
