@@ -1,6 +1,9 @@
 mod cli;
 mod md;
 
+#[cfg(tests)]
+mod tests;
+
 use std::env;
 use std::vec;
 

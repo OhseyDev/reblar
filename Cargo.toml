@@ -5,3 +5,4 @@ edition = "2021"
 authors = ["Olivia Thompson"]
 
 [dependencies]
+dirs = "4.0.0"
