@@ -32,6 +32,7 @@ pub fn process_command(c: char, args: &vec::Vec<String>) -> Result<(), String> {
     }
 }
 
+#[inline]
 fn build_all(_args: &vec::Vec<String>) -> Result<(), String> {
     let dir = {
         let mut path = dirs::home_dir().unwrap();
