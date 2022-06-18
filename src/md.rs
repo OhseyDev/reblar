@@ -13,7 +13,7 @@ pub fn build(source_file: &'static str) -> Result<(), String> {
     for (index, line) in reader.lines().enumerate() {
         let line = line.unwrap();
         // TODO: handle parsing of Markdown document
-        println!("{}. {}", index + 1, line);
+        println!("{}. {}", index, line);
     }
     return Ok(());
 }
