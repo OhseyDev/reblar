@@ -24,6 +24,7 @@ pub fn build(source_file: &'static str) -> Result<(), String> {
                 line.remove(0);
             }
             if line.starts_with(' ') { line.remove(0); }
+            process_minor(&mut line);
             let tag = format!("<h{}>{}</h{}>", level, line, level);
             html_doc = html_doc.add(tag.as_str());
         }
@@ -34,6 +35,20 @@ pub fn build(source_file: &'static str) -> Result<(), String> {
 
 #[inline]
 fn process_minor(line: &mut String) {
+    let toggle = false;
+    for index in line.find("*") {
+        let mut string = "<i>";
+        if toggle { string = "</i>"; }
+        line.insert_str(index, string);
+    }
+    for index in line.find("**") {
+        let mut string = "<b>";
+        if toggle { string = "</b>"; }
+        line.insert_str(index, string);
+    }
+    for index in line.find("*") {
+        line.remove(index);
+    }
 }
 
 // pub fn validate()
