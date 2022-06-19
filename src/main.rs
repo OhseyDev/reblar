@@ -1,5 +1,6 @@
-mod cli;
-mod md;
+pub(crate) mod cli;
+pub(crate) mod md;
+pub(crate) mod highlighter;
 
 #[cfg(tests)]
 mod tests;
