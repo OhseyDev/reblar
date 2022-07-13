@@ -1,9 +1,8 @@
 use std::collections::BTreeMap;
 
 /*
-    Style-rule
+    Style-rule data structures
 */
-
 pub enum Property {
     Background()
 }

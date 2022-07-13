@@ -25,9 +25,9 @@ impl LexerTokens {
         let mut state = 0 as u8;
         for c in src.chars() {
             match c {
-                '0'..='9' => { push(c, proc_digit(c, state, &mut str), &mut state, &mut tokens, &mut str); }
-                'a'..='z' | 'A'..='Z' => { push(c, proc_letter(c, state, &mut str), &mut state, &mut tokens, &mut str); }
-                '.' => {  }
+                '0'..='9' => { push(c, proc_digit(state), &mut state, &mut tokens, &mut str); }
+                'a'..='z' | 'A'..='Z' => { push(c, proc_letter(state), &mut state, &mut tokens, &mut str); }
+                '.' => { push(c, proc_dot(state), &mut state, &mut tokens, &mut str); }
                 _ => {}
             }
         }
@@ -37,24 +37,24 @@ impl LexerTokens {
 }
 
 #[inline]
-fn proc_digit(c: char, state: u8, str: &mut String) -> u8 {
+fn proc_digit(state: u8) -> u8 {
     match state {
-        1|2 => { str.push(c); 0 }
+        1|2 => { 0 }
         _ => { 1 }
     }
 }
 
 #[inline]
-fn proc_letter(c: char, state: u8, str: &mut String) -> u8 {
+fn proc_letter(state: u8) -> u8 {
     match state {
         0 => { 2 }
-        2 => { str.push(c); 0 }
+        2 => { 0 }
         _ => { 2 }
     }
 }
 
 #[inline]
-fn proc_dot(c: char, state: u8, str: &mut String) -> u8 {
+fn proc_dot(state: u8) -> u8 {
     match state {
         0 => { 4 }
         1 => { 3 }
@@ -80,6 +80,6 @@ fn push(c: char, change: u8, state: &mut u8, tokens: &mut Vec<Token>, str: &mut 
         if res.is_some() { tokens.push(res.unwrap()); }
         *state = change;
         str.clear();
-        str.push(c);
     }
+    str.push(c);
 }
