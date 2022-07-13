@@ -13,14 +13,17 @@ pub struct LexerTokens {
 }
 
 impl LexerTokens {
-    pub fn parse(src: &'static str) -> LexerTokens {
+    pub fn parse(src: &'static str, strict: bool) -> LexerTokens {
         let mut tokens = Vec::new();
         let mut str = String::new();
         /* 
             0 => Undecided
             1 => Number
-            2 => Literal
+            2 => Identifier
             3 => Decimal Number
+            4 => Undecided Dot
+            5 => Character Literal
+            6 => String Literal
         */
         let mut state = 0 as u8;
         for c in src.chars() {
@@ -28,7 +31,16 @@ impl LexerTokens {
                 '0'..='9' => { push(c, proc_digit(state), &mut state, &mut tokens, &mut str); }
                 'a'..='z' | 'A'..='Z' => { push(c, proc_letter(state), &mut state, &mut tokens, &mut str); }
                 '.' => { push(c, proc_dot(state), &mut state, &mut tokens, &mut str); }
-                _ => {}
+                '\'' => {
+                    let change = {
+                        let s = strict as u8;
+                        let l = 6 * (!strict) as u8;
+                        l + proc_quote(true) * s
+                    };
+                    push(c, change, &mut state, &mut tokens, &mut str)
+                }
+                '\"' => { push(c, 6, &mut state, &mut tokens, &mut str) }
+                _ => { push(c, 255, &mut state, &mut tokens, &mut str); }
             }
         }
         LexerTokens { tokens }
@@ -41,6 +53,14 @@ fn proc_digit(state: u8) -> u8 {
     match state {
         1|2 => { 0 }
         _ => { 1 }
+    }
+}
+
+#[inline]
+fn proc_quote(single: bool) -> u8 {
+    match single {
+        false => { 6 }
+        true => { 5 }
     }
 }
 
@@ -81,5 +101,5 @@ fn push(c: char, change: u8, state: &mut u8, tokens: &mut Vec<Token>, str: &mut 
         *state = change;
         str.clear();
     }
-    str.push(c);
+    if change >= 6 && change <=5 { str.push(c); }
 }
