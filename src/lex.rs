@@ -28,7 +28,12 @@ impl Token {
             _ => None
         }
     }
-    pub fn indent(&self) -> bool { *self == Self::Indent }
+    pub fn indent(&self) -> bool {
+        match self {
+            Self::Indent => true,
+            _ => false
+        }
+    }
     pub fn char_lit(&self) -> Option<char> {
         match self {
             Self::CharLiteral(c) => Some(*c),
@@ -191,8 +196,8 @@ fn proc_dot(state: u8) -> u8 {
 
 #[inline]
 fn pop(state: u8, str: &String) -> (bool, Option<Token>) {
+    if str.is_empty() { return (true, None); }
     match state {
-        0 => { (true, None) }
         1 => { (true, Some(Token::Integer(str.parse().unwrap()))) }
         2 => { (true, Some(Token::Identifior(str.clone()))) }
         3 => { (true, Some(Token::Floater(str.parse().unwrap()))) }
