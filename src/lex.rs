@@ -183,31 +183,31 @@ fn proc_dot(state: u8) -> u8 {
 }
 
 #[inline]
-fn pop(state: u8, str: &String) -> Option<Option<Token>> {
+fn pop(state: u8, str: &String) -> (bool, Option<Token>) {
     match state {
-        0 => { Some(None) }
-        1 => { Some(Some(Token::Integer(str.parse().unwrap()))) }
-        2 => { Some(Some(Token::Identifior(str.clone()))) }
-        3 => { Some(Some(Token::Floater(str.parse().unwrap()))) }
+        0 => { (true, None) }
+        1 => { (true, Some(Token::Integer(str.parse().unwrap()))) }
+        2 => { (true, Some(Token::Identifior(str.clone()))) }
+        3 => { (true, Some(Token::Floater(str.parse().unwrap()))) }
         5 => {
-            if str.len() > 1 { return None; }
-            Some(Some(Token::CharLiteral(str.chars().next().unwrap())))
+            if str.len() > 1 { return (false, None); }
+            (true, Some(Token::CharLiteral(str.chars().next().unwrap())))
         }
-        6 => { Some(Some(Token::StrLiteral(str.clone()))) }
-        _ => { Some(Some(Token::Other(str.clone()))) }
+        6 => { (true, Some(Token::StrLiteral(str.clone()))) }
+        _ => { (true, Some(Token::Other(str.clone()))) }
     }
 }
 
 #[inline]
 fn push(c: char, change: u8, state: &mut u8, tokens: &mut Vec<Token>, str: &mut String, strict: bool) -> bool {
     if change > 0 {
-        let res = pop(*state, &str);
-        if res.is_none() { return true; }
-        let res = res.unwrap();
-        if res.is_none() { return false; }
-        tokens.push(res.unwrap());
-        *state = change;
-        str.clear();
+        let (ok, res) = pop(*state, &str);
+        if !ok { return true; }
+        if res.is_some() {
+            tokens.push(res.unwrap());
+            *state = change;
+            str.clear();
+        }
     }
     if change > 6 && change < 5 { str.push(c); }
     strict && str.len() >= 2 && *state == 5
