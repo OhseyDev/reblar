@@ -6,17 +6,19 @@ pub enum Token {
     Floater(f64),
     StrLiteral(String),
     CharLiteral(char),
+    Indent,
     Other(String),
 }
 
 #[derive(Debug, Copy, Clone)]
 pub struct Mode {
     pub strict_literals: bool,
-    pub space_sensitive: bool
+    pub indent_sensitive: bool
 }
 
 impl Mode {
-    pub fn loose() -> Mode { Mode { strict_literals: false, space_sensitive: false } }
+    pub fn loose() -> Mode { Mode { strict_literals: false, indent_sensitive: false } }
+    pub fn strict() -> Mode { Mode { strict_literals: true, indent_sensitive: true } }
 }
 
 impl Token {
@@ -26,6 +28,7 @@ impl Token {
             _ => None
         }
     }
+    pub fn indent(&self) -> bool { *self == Self::Indent }
     pub fn char_lit(&self) -> Option<char> {
         match self {
             Self::CharLiteral(c) => Some(*c),
@@ -68,7 +71,7 @@ impl Token {
             5 => Character Literal
             6 => String Literal
             7 => Reserved
-            8 => Space
+            8 => Indent
         */
         let mut state = 0 as u8;
         let mut string_slash = false;
@@ -95,6 +98,9 @@ impl Token {
                         l + proc_quote(state, true) * s
                     };
                     not_ok = push(c, change, &mut state, &mut tokens, &mut str, mode);
+                }
+                '\n'|'\t' => {
+                    not_ok = push(c, 8, &mut state, &mut tokens, &mut str, mode);
                 }
                 '\"' => { not_ok = push(c, 6, &mut state, &mut tokens, &mut str, mode); }
                 _ => { not_ok = push(c, 255, &mut state, &mut tokens, &mut str, mode); }
@@ -138,6 +144,9 @@ impl PartialEq for Token {
                 if other.is_none() { return false }
                 other.unwrap() == *c
             }
+            Self::Indent => {
+                self.indent()
+            }
         }
     }
 }
@@ -154,9 +163,7 @@ fn proc_digit(state: u8) -> u8 {
 #[inline]
 fn proc_quote(state: u8, single: bool) -> u8 {
     match state {
-        5 => {
-            7
-        }
+        5 => { 7 }
         _ => {
             match single {
                 false => { 6 }
@@ -169,7 +176,7 @@ fn proc_quote(state: u8, single: bool) -> u8 {
 #[inline]
 fn proc_letter(state: u8) -> u8 {
     match state {
-        2 => { 0 }
+        2|5|6 => { 0 }
         _ => { 2 }
     }
 }
@@ -194,21 +201,24 @@ fn pop(state: u8, str: &String) -> (bool, Option<Token>) {
             (true, Some(Token::CharLiteral(str.chars().next().unwrap())))
         }
         6 => { (true, Some(Token::StrLiteral(str.clone()))) }
+        8 => { (true, Some(Token::Indent)) }
         _ => { (true, Some(Token::Other(str.clone()))) }
     }
 }
 
 #[inline]
 fn push(c: char, change: u8, state: &mut u8, tokens: &mut Vec<Token>, str: &mut String, mode: Mode) -> bool {
-    if change > 0 {
+    if change > 0 && change < 255 {
         let (ok, res) = pop(*state, &str);
         if !ok { return true; }
+        *state = change;
         if res.is_some() {
             tokens.push(res.unwrap());
-            *state = change;
             str.clear();
         }
     }
-    if change > 6 && change < 5 { str.push(c); }
+    if change > 6 || change < 5 {
+        str.push(c);
+    }
     mode.strict_literals && str.len() >= 2 && *state == 5
 }
