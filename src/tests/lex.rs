@@ -1,10 +1,12 @@
-use crate::lex::{self, LexerTokens};
+use crate::lex::{self};
 
 #[test]
 pub fn lex_test() {
-    let act_res = lex::LexerTokens::parse("hello14641", false);
-    let exp_res = LexerTokens { tokens: vec![
-        lex::Token::Identifior("hello14641".to_string())
-    ]};
+    let mode = lex::Mode::loose();
+    let act_res = lex::Token::parse("hello14641\"hey friend\"", mode);
+    let exp_res =  vec![
+        lex::Token::Identifior("hello14641".to_string()),
+        lex::Token::StrLiteral("hey friend".to_string())
+    ];
     assert_eq!(Some(exp_res), act_res);
 }

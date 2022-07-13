@@ -9,6 +9,16 @@ pub enum Token {
     Other(String),
 }
 
+#[derive(Debug, Copy, Clone)]
+pub struct Mode {
+    pub strict_literals: bool,
+    pub space_sensitive: bool
+}
+
+impl Mode {
+    pub fn loose() -> Mode { Mode { strict_literals: false, space_sensitive: false } }
+}
+
 impl Token {
     pub fn identifier(&self) -> Option<String> {
         match self {
@@ -45,6 +55,53 @@ impl Token {
             Self::Other(c) => Some(c.clone()),
             _ => None
         }
+    }
+    pub fn parse(src: &'static str, mode: Mode) -> Option<Vec<Token>> {
+        let mut tokens = Vec::new();
+        let mut str = String::new();
+        /* 
+            0 => Undecided
+            1 => Number
+            2 => Identifier
+            3 => Decimal Number
+            4 => Undecided Dot
+            5 => Character Literal
+            6 => String Literal
+            7 => Reserved
+            8 => Space
+        */
+        let mut state = 0 as u8;
+        let mut string_slash = false;
+        for c in src.chars() {
+            let not_ok;
+            if string_slash {
+                str.push(c);
+                string_slash = false;
+                continue;
+            }
+            match c {
+                '\\' => {
+                    if state > 6 && state < 5 { continue; }
+                    string_slash = true;
+                    not_ok = false;
+                }
+                '0'..='9' => { not_ok = push(c, proc_digit(state), &mut state, &mut tokens, &mut str, mode); }
+                'a'..='z' | 'A'..='Z' => { not_ok = push(c, proc_letter(state), &mut state, &mut tokens, &mut str, mode); }
+                '.' => { not_ok = push(c, proc_dot(state), &mut state, &mut tokens, &mut str, mode); }
+                '\'' => {
+                    let change = {
+                        let s = mode.strict_literals as u8;
+                        let l = 6 * (!mode.strict_literals) as u8;
+                        l + proc_quote(state, true) * s
+                    };
+                    not_ok = push(c, change, &mut state, &mut tokens, &mut str, mode);
+                }
+                '\"' => { not_ok = push(c, 6, &mut state, &mut tokens, &mut str, mode); }
+                _ => { not_ok = push(c, 255, &mut state, &mut tokens, &mut str, mode); }
+            };
+            if not_ok { return None; }
+        }
+        Some(tokens)
     }
 }
 
@@ -83,63 +140,6 @@ impl PartialEq for Token {
             }
         }
     }
-}
-
-#[derive(Debug)]
-pub struct LexerTokens {
-    pub(crate) tokens: Vec<Token>
-}
-
-impl PartialEq for LexerTokens {
-    fn eq(&self, other: &Self) -> bool {
-        let mut slf_iter = self.tokens.iter();
-        for oth_token in other.tokens.iter() {
-            if *oth_token != *slf_iter.next().unwrap() {
-                return false;
-            }
-        }
-        return true;
-    }
-}
-
-impl LexerTokens {
-    pub fn parse(src: &'static str, strict: bool) -> Option<LexerTokens> {
-        let mut tokens = Vec::new();
-        let mut str = String::new();
-        /* 
-            0 => Undecided
-            1 => Number
-            2 => Identifier
-            3 => Decimal Number
-            4 => Undecided Dot
-            5 => Character Literal
-            6 => String Literal
-            7 => Reserved
-        */
-        let mut state = 0 as u8;
-        for c in src.chars() {
-            let not_ok;
-            match c {
-                '0'..='9' => { not_ok = push(c, proc_digit(state), &mut state, &mut tokens, &mut str, strict); }
-                'a'..='z' | 'A'..='Z' => { not_ok = push(c, proc_letter(state), &mut state, &mut tokens, &mut str, strict); }
-                '.' => { not_ok = push(c, proc_dot(state), &mut state, &mut tokens, &mut str, strict); }
-                '\'' => {
-                    let change = {
-                        let s = strict as u8;
-                        let l = 6 * (!strict) as u8;
-                        l + proc_quote(state, true) * s
-                    };
-                    not_ok = push(c, change, &mut state, &mut tokens, &mut str, strict);
-                }
-                '\"' => { not_ok = push(c, 6, &mut state, &mut tokens, &mut str, strict); }
-                _ => { not_ok = push(c, 255, &mut state, &mut tokens, &mut str, strict); }
-            };
-            println!("{}", not_ok);
-            if not_ok { return None; }
-        }
-        Some(LexerTokens { tokens })
-    }
-    pub fn tokens(&self) -> &Vec<Token> { &self.tokens }
 }
 
 #[inline]
@@ -199,7 +199,7 @@ fn pop(state: u8, str: &String) -> (bool, Option<Token>) {
 }
 
 #[inline]
-fn push(c: char, change: u8, state: &mut u8, tokens: &mut Vec<Token>, str: &mut String, strict: bool) -> bool {
+fn push(c: char, change: u8, state: &mut u8, tokens: &mut Vec<Token>, str: &mut String, mode: Mode) -> bool {
     if change > 0 {
         let (ok, res) = pop(*state, &str);
         if !ok { return true; }
@@ -210,5 +210,5 @@ fn push(c: char, change: u8, state: &mut u8, tokens: &mut Vec<Token>, str: &mut 
         }
     }
     if change > 6 && change < 5 { str.push(c); }
-    strict && str.len() >= 2 && *state == 5
+    mode.strict_literals && str.len() >= 2 && *state == 5
 }
