@@ -1,4 +1,4 @@
-pub trait Name { fn name(&self) -> &'static str; }
+pub trait Name { fn name(&self) -> &String; }
 pub trait PropertyValue {
     type PropertyType;
     type ValueType;
@@ -8,8 +8,10 @@ pub trait PropertyValue {
 }
 
 pub trait ParentChild {
-    fn child(&self) -> Option<&'static Self>;
-    fn parent(&self) -> Option<&'static Self>;
+    type ParentType;
+    type ChildType;
+    fn child(&self) -> &Self::ChildType;
+    fn parent(&self) -> &Self::ParentType;
 }
 
 pub trait ParseCompile {

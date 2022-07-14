@@ -1,5 +1,7 @@
 use std::collections::BTreeMap;
 
+use crate::lex;
+
 /*
     Style-rule data structures
 */
@@ -29,28 +31,57 @@ impl crate::traits::PropertyValue for Rule {
 */
 
 pub struct Selector {
-    name: &'static str,
-    child: Option<&'static Selector>,
-    parent: Option<&'static Selector>
+    pub(crate) name: String,
+    pub(crate) parent: Option<&'static Selector>,
+    pub(crate) child: Option<Box<Selector>>
+}
+
+impl Selector {
+    pub fn empty() -> Self {
+        Self { name: String::new(), parent: None, child: None }
+    }
 }
 
 impl crate::traits::ParentChild for Selector {
-    fn child(&self) -> Option<&'static Self> { self.child }
-    fn parent(&self) -> Option<&'static Self> { self.parent }
+    type ChildType = Option<Box<Self>>;
+    type ParentType = Option<&'static Self>;
+    fn child(&self) -> &Self::ChildType { &self.child }
+    fn parent(&self) -> &Self::ParentType { &self.parent }
 }
 
 impl crate::traits::Name for Selector {
-    fn name(&self) -> &'static str { self.name }
+    fn name(&self) -> &String { &self.name }
 }
 
 /*
     Style struct
 */
 pub struct Asset {
-    name: &'static str,
+    name: String,
     rules: BTreeMap<Selector, Vec<Rule>>,
 }
 
+impl Asset {
+    pub fn parse(name: &'static str, tokens: &Vec<lex::Token>, sass_syntax: bool) -> Option<Self> {
+        let mut rules = BTreeMap::new();
+        let mut selector = Selector::empty();
+        let mut sel_child = None;
+        for token in tokens {
+            match token {
+                lex::Token::Identifior(n) => {
+                    if !selector.name.is_empty() {
+                        selector.child = Some(Box::new(Selector::empty()));
+                        sel_child = Some(&selector.child);
+                    }
+                }
+                _ => {}
+            }
+        }
+        Some(Self { name: String::from(name), rules })
+    }
+    pub fn rules(&self) -> &BTreeMap<Selector, Vec<Rule>> { &self.rules }
+}
+
 impl crate::traits::Name for Asset {
-    fn name(&self) -> &'static str { self.name }
+    fn name(&self) -> &String { &self.name }
 }
