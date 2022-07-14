@@ -105,7 +105,7 @@ impl Token {
                     not_ok = push(c, change, &mut state, &mut tokens, &mut str, mode);
                 }
                 '\n'|'\t' => {
-                    not_ok = push(c, 8, &mut state, &mut tokens, &mut str, mode);
+                    not_ok = push(c, 8 * (state != 5 && state != 6) as u8, &mut state, &mut tokens, &mut str, mode);
                 }
                 '\"' => { not_ok = push(c, 6, &mut state, &mut tokens, &mut str, mode); }
                 _ => { not_ok = push(c, 255, &mut state, &mut tokens, &mut str, mode); }

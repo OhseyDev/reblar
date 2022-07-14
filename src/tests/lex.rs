@@ -14,11 +14,11 @@ fn loose() {
 #[test]
 fn strict() {
     let mode = lex::Mode::strict();
-    let act_res = lex::Token::parse("hello14641\n\"hey friend\"'c'", mode);
+    let act_res = lex::Token::parse("hello14641\n\"hey\tfriend\"'c'", mode);
     let exp_res = vec![
         lex::Token::Identifior("hello14641".to_string()),
         lex::Token::Indent,
-        lex::Token::StrLiteral("hey friend".to_string()),
+        lex::Token::StrLiteral("hey\tfriend".to_string()),
         lex::Token::CharLiteral('c')
     ];
     assert_eq!(Some(exp_res), act_res);
