@@ -1,4 +1,4 @@
-use crate::lex::{self};
+use crate::lex::{self, Indent};
 
 #[test]
 fn loose() {
@@ -17,7 +17,7 @@ fn strict() {
     let act_res = lex::Token::parse("hello14641\n\"hey\tfriend\"'c'", mode);
     let exp_res = vec![
         lex::Token::Identifior("hello14641".to_string()),
-        lex::Token::Indent,
+        lex::Token::Indent(Indent::NewLine),
         lex::Token::StrLiteral("hey\tfriend".to_string()),
         lex::Token::CharLiteral('c')
     ];
