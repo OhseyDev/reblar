@@ -3,7 +3,7 @@ use crate::lex::{self, Indent};
 #[test]
 fn loose() {
     let mode = lex::Mode::loose();
-    let act_res = lex::Token::parse("hello14641\"hey friend\"", mode);
+    let act_res = lex::Token::parse(&"hello14641\"hey friend\"".to_string(), mode);
     let exp_res =  vec![
         lex::Token::Identifior("hello14641".to_string()),
         lex::Token::StrLiteral("hey friend".to_string())
@@ -14,7 +14,7 @@ fn loose() {
 #[test]
 fn strict() {
     let mode = lex::Mode::strict();
-    let act_res = lex::Token::parse("hello14641\n\"hey\tfriend\"'c'", mode);
+    let act_res = lex::Token::parse(&"hello14641\n\"hey\tfriend\"'c'".to_string(), mode);
     let exp_res = vec![
         lex::Token::Identifior("hello14641".to_string()),
         lex::Token::Indent(Indent::NewLine),

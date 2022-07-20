@@ -90,7 +90,7 @@ impl Token {
             _ => { false }
         }
     }
-    pub fn parse(src: &'static str, mode: Mode) -> Option<Vec<Token>> {
+    pub fn parse(src: &String, mode: Mode) -> Option<Vec<Token>> {
         let mut tokens = Vec::new();
         let mut str = String::new();
         /* 

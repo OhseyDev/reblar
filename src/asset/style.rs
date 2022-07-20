@@ -1,6 +1,6 @@
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, io::Read};
 
-use crate::lex::{IndentMode, Token};
+use crate::{lex::{IndentMode, Token}, Resource};
 
 /*
     Style-rule data structures
@@ -70,18 +70,40 @@ pub struct Asset {
     rules: BTreeMap<Selector, Vec<Rule>>,
 }
 
+pub enum Error {
+    IOError(std::io::Error),
+    SyntaxError,
+    Unknown
+}
+
 impl Asset {
     const VALS: [char; 2] = ['$', '-'];
     const MODE_NORM: crate::lex::Mode = crate::lex::Mode { strict_literals: false, schar_identp: true, indents: IndentMode::min(), schar_vals: Some(&Self::VALS) };
     const MODE_SASSY: crate::lex::Mode = crate::lex::Mode { strict_literals: false, schar_identp: true, indents: IndentMode::strong(), schar_vals: Some(&Self::VALS) };
-    
-    pub fn parse(name: &'static str, src: &'static str, sassy: bool) -> Option<Self> {
+    pub fn rules(&self) -> &BTreeMap<Selector, Vec<Rule>> { &self.rules }
+}
+
+impl Resource for Asset {
+    type Error = Error;
+    type Options = bool;
+    fn file(path: &std::path::Path, sassy: bool) -> Result<Self, Self::Error> {
+        let mut file = {
+            let f = std::fs::File::open(path);
+            if f.is_err() { return Err(Error::IOError(f.err().unwrap()))}
+            f.unwrap()
+        };
+        let (src, _len) = {
+            let mut src  = String::new();
+            let res = file.read_to_string(&mut src);
+            if res.is_err() { return Err(Error::IOError(res.err().unwrap()));}
+            (src, res.unwrap())
+        };
         let tokens = {
             let mode;
             if sassy { mode = Self::MODE_SASSY; }
             else { mode = Self::MODE_NORM; }
-            let res = crate::lex::Token::parse(src, mode);
-            if res.is_none() { return None; }
+            let res = crate::lex::Token::parse(&src, mode);
+            if res.is_none() { return Err(Error::Unknown); }
             res.unwrap()
         };
         let rules = BTreeMap::new();
@@ -119,19 +141,23 @@ impl Asset {
                     }
                 }
                 crate::lex::Token::Other(c) => {
-                    if sassy { return None; }
+                    if sassy { return Err(Error::SyntaxError); }
                     match c.as_str() {
                         "{" => {
                             block_indent+=1;
                         }
                         "}" => {
-                            if block_indent == 0 { return None; }
+                            if block_indent == 0 { return Err(Error::SyntaxError); }
                             block_indent-=1;
                         }
                         ":" => {
                             if is_selector {
                                 append_selector = true;
                                 is_selector = false;
+                            }
+                            let ident = last_tok.identifier();
+                            if ident.is_some() {
+                                
                             }
                         }
                         _ => {}
@@ -141,9 +167,8 @@ impl Asset {
             }
             last_tok = token.clone();
         }
-        Some(Self { name: String::from(name), rules })
+        Ok(Self { name: String::from(path.file_name().unwrap().to_string_lossy()), rules })
     }
-    pub fn rules(&self) -> &BTreeMap<Selector, Vec<Rule>> { &self.rules }
 }
 
 impl crate::traits::Name for Asset {
