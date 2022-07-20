@@ -74,6 +74,7 @@ impl Asset {
     const VALS: [char; 2] = ['$', '-'];
     const MODE_NORM: crate::lex::Mode = crate::lex::Mode { strict_literals: false, schar_identp: true, indents: IndentMode::min(), schar_vals: Some(&Self::VALS) };
     const MODE_SASSY: crate::lex::Mode = crate::lex::Mode { strict_literals: false, schar_identp: true, indents: IndentMode::strong(), schar_vals: Some(&Self::VALS) };
+    
     pub fn parse(name: &'static str, src: &'static str, sassy: bool) -> Option<Self> {
         let tokens = {
             let mode;
@@ -118,7 +119,7 @@ impl Asset {
                     }
                 }
                 crate::lex::Token::Other(c) => {
-                    if sassy && ident.is_none() { return None; }
+                    if sassy { return None; }
                     match c.as_str() {
                         "{" => {
                             block_indent+=1;
