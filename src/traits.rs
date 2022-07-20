@@ -19,3 +19,13 @@ pub trait ParseCompile {
     fn parse(src: Vec<crate::lex::Token>) -> Result<Box<Self>, Self::Error>;
     fn compile(&self) -> Result<&'static str, Self::Error>;
 }
+
+pub trait Resource: Sized {
+    type Error;
+    type Options;
+    fn file(path: &std::path::Path, options: Self::Options) -> Result<Self, Self::Error>;
+}
+
+pub trait Builder {
+    type Resource: Resource;
+}

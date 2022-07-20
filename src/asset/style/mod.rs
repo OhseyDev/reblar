@@ -1,12 +1,13 @@
-use std::{collections::BTreeMap, io::Read};
+pub mod properties;
 
-use crate::{lex::{IndentMode, Token}, Resource};
+use std::{collections::BTreeMap, io::Read};
+use crate::{lex::{IndentMode, Token}, traits::Resource};
 
 /*
     Style-rule data structures
 */
 pub enum Property {
-    Background()
+    Background(properties::BackgroundProperty)
 }
 
 pub enum Value {
@@ -29,7 +30,6 @@ impl crate::traits::PropertyValue for Rule {
 /*
     Style Selector
 */
-
 pub struct Selector {
     pub(crate) name: String,
     pub(crate) parent: Option<Box<Selector>>
