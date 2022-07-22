@@ -25,7 +25,3 @@ pub fn process(var: &Variables, mut toks: Vec<crate::lex::Token>) -> Vec<crate::
     }
     toks
 }
-/*
-impl ToString for crate::lex::Tokens  {
-}
-*/

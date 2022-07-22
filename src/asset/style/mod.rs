@@ -1,7 +1,7 @@
 pub mod bg;
 
 use std::{collections::BTreeMap, io::Read};
-use crate::{lex::{IndentMode, Token}, traits::Resource};
+use crate::{lex, traits::Resource};
 
 /*
     Style-rule data structures
@@ -78,8 +78,8 @@ pub enum Error {
 
 impl Asset {
     const VALS: [char; 2] = ['$', '-'];
-    const MODE_NORM: crate::lex::Mode = crate::lex::Mode { strict_literals: false, schar_identp: true, indents: IndentMode::min(), schar_vals: Some(&Self::VALS) };
-    const MODE_SASSY: crate::lex::Mode = crate::lex::Mode { strict_literals: false, schar_identp: true, indents: IndentMode::strong(), schar_vals: Some(&Self::VALS) };
+    const MODE_NORM: crate::lex::Mode = crate::lex::Mode { strict_literals: false, schar_identp: true, indents: lex::IndentMode::min(), schar_vals: Some(&Self::VALS) };
+    const MODE_SASSY: crate::lex::Mode = crate::lex::Mode { strict_literals: false, schar_identp: true, indents: lex::IndentMode::strong(), schar_vals: Some(&Self::VALS) };
     pub fn rules(&self) -> &BTreeMap<Selector, Vec<Rule>> { &self.rules }
 }
 
@@ -113,7 +113,7 @@ impl Resource for Asset {
         let mut is_selector = false;
         let mut is_value = false;
         let mut append_selector = false;
-        let mut last_tok = Token::None;
+        let mut last_tok = lex::Token::None;
         for token in tokens {
             match token.clone() {
                 crate::lex::Token::Identifior(n) => {

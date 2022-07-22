@@ -26,6 +26,30 @@ impl IntoIterator for Tokens {
         return self.vec.into_iter()
     }
 }
+impl ToString for crate::lex::Tokens {
+    fn to_string(&self) -> String {
+        let mut str = String::new();
+        for token in self.vec.clone() {
+            match token {
+                Token::CharLiteral(c) => { str += format!("\"{}\"", c).as_str(); }
+                Token::StrLiteral(s) => { str += format!("\"{}\"", s).as_str(); }
+                Token::Floater(f) => { str += f.to_string().as_str() }
+                Token::Integer(i) => { str += i.to_string().as_str() }
+                Token::Identifior(ident) => { str += ident.as_str() }
+                Token::Indent(indent) => {
+                    match indent {
+                        Indent::NewLine => { str.insert(str.chars().count(), '\n'); }
+                        Indent::Tab => { str.insert(str.chars().count(), '\t'); }
+                        Indent::Space => { str.insert(str.chars().count(), ' '); }
+                    }
+                }
+                Token::Other(s) => { str += s.as_str(); }
+                Token::None => { continue }
+            }
+        }
+        str
+    }
+}
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Indent { NewLine, Tab, Space }
 #[derive(Debug, Clone)]
