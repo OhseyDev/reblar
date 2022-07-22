@@ -7,25 +7,28 @@ pub trait PropertyValue {
     fn value(&self) -> &Self::ValueType;
 }
 
-pub trait ParentChild {
-    type ParentType;
-    type ChildType;
-    fn child(&self) -> &Self::ChildType;
-    fn parent(&self) -> &Self::ParentType;
+pub trait Parent {
+    type Type;
+    fn parent(&self) -> &Self::Type;
 }
-
+pub trait Child {
+    type Type;
+    fn child(&self) -> &Self::Type;
+}
 pub trait ParseCompile {
     type Error;
-    fn parse(src: Vec<crate::lex::Token>) -> Result<Box<Self>, Self::Error>;
-    fn compile(&self) -> Result<&'static str, Self::Error>;
+    fn parse(src: crate::lex::Tokens) -> Result<Box<Self>, Self::Error>;
 }
-
 pub trait Resource: Sized {
     type Error;
     type Options;
     fn file(path: &std::path::Path, options: Self::Options) -> Result<Self, Self::Error>;
 }
-
+pub trait Asset: Resource + Sized {
+    fn src(src: &String, options: Self::Options) -> Result<Self, Self::Error>;
+}
 pub trait Builder {
     type Resource: Resource;
+    type Error;
+    fn build(&self) -> Result<Self::Resource, Self::Error>;
 }

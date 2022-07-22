@@ -51,11 +51,9 @@ impl Selector {
     }
 }
 
-impl crate::traits::ParentChild for Selector {
-    type ParentType = Option<Box<Self>>;
-    type ChildType = Option<&'static Self>;
-    fn child(&self) -> &Self::ChildType { &None }
-    fn parent(&self) -> &Self::ParentType { &self.parent }
+impl crate::traits::Parent for Selector {
+    type Type = Option<Box<Self>>;
+    fn parent(&self) -> &Self::Type { &self.parent }
 }
 
 impl crate::traits::Name for Selector {
@@ -81,6 +79,7 @@ impl Asset {
     const MODE_NORM: crate::lex::Mode = crate::lex::Mode { strict_literals: false, schar_identp: true, indents: lex::IndentMode::min(), schar_vals: Some(&Self::VALS) };
     const MODE_SASSY: crate::lex::Mode = crate::lex::Mode { strict_literals: false, schar_identp: true, indents: lex::IndentMode::strong(), schar_vals: Some(&Self::VALS) };
     pub fn rules(&self) -> &BTreeMap<Selector, Vec<Rule>> { &self.rules }
+    
 }
 
 impl Resource for Asset {
