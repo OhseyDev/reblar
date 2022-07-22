@@ -7,7 +7,7 @@ use crate::{lex::{IndentMode, Token}, traits::Resource};
     Style-rule data structures
 */
 pub enum Property {
-    Background(bg::Background)
+    Background(bg::BackgroundProperty)
 }
 
 pub enum Value {

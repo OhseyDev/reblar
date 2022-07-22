@@ -56,3 +56,4 @@ pub struct Background {
     pub repeat: BackgroundRepeat,
     pub size: BackgroundSize
 }
+pub enum BackgroundProperty { Color,Image,Attachment,BlendMode,Clip,Origin,Repeat,Size }
