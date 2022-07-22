@@ -6,14 +6,13 @@ use crate::{lex, traits::Resource};
 /*
     Style-rule data structures
 */
+#[derive(Debug,Clone)]
 pub enum Property {
     Background(bg::BackgroundProperty)
 }
-
-pub enum Value {
-
-}
-
+#[derive(Debug,Clone)]
+pub enum Value {}
+#[derive(Debug,Clone)]
 pub struct Rule {
     property: Property,
     value: Value
@@ -30,6 +29,7 @@ impl crate::traits::PropertyValue for Rule {
 /*
     Style Selector
 */
+#[derive(Debug,Clone)]
 pub struct Selector {
     pub(crate) name: String,
     pub(crate) parent: Option<Box<Selector>>
@@ -50,12 +50,6 @@ impl Selector {
         return str;
     }
 }
-
-impl crate::traits::Parent for Selector {
-    type Type = Option<Box<Self>>;
-    fn parent(&self) -> &Self::Type { &self.parent }
-}
-
 impl crate::traits::Name for Selector {
     fn name(&self) -> &String { &self.name }
 }
@@ -63,6 +57,7 @@ impl crate::traits::Name for Selector {
 /*
     Style struct
 */
+#[derive(Debug,Clone)]
 pub struct Asset {
     name: String,
     rules: BTreeMap<Selector, Vec<Rule>>,

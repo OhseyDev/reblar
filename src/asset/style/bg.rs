@@ -1,9 +1,12 @@
+#[derive(Debug,Clone,PartialEq)]
 pub enum Color {
     RGB(f64,f64,f64),RGBA(f64,f64,f64,f64),
     HSL(f64,f64,f64),HSLA(f64,f64,f64,f64),
     Name(String),Transparent
 }
+#[derive(Debug,Clone,PartialEq)]
 pub enum Direction { Left,Right,Bottom,Top,None }
+#[derive(Debug,Clone,PartialEq)]
 pub struct BackgroundPosition {
     pub x: PositionValue,
     pub y: PositionValue
@@ -29,6 +32,7 @@ pub struct RadialGradient {
     pub position: PositionValue,
     pub values: Vec<ConicGradientValue>
 }
+#[derive(Debug,Clone,PartialEq,Copy)]
 pub enum PositionValue {
     Left,Right,Center,Top,Bottom,
     Percentage(f64),Pixels(i64)
@@ -44,6 +48,7 @@ pub enum BackgroundImage {
     ConicGradient(ConicGradient),
     LinearGradient(LinearGradient),
 }
+#[derive(Debug,Clone)]
 pub enum BackgroundColor { Color(Color),CurrentColor }
 pub struct Background {
     pub color: BackgroundColor,
@@ -56,4 +61,5 @@ pub struct Background {
     pub repeat: BackgroundRepeat,
     pub size: BackgroundSize
 }
+#[derive(Debug,Clone)]
 pub enum BackgroundProperty { Color,Image,Attachment,BlendMode,Clip,Origin,Repeat,Size }

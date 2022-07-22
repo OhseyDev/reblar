@@ -2,20 +2,10 @@ pub trait Name { fn name(&self) -> &String; }
 pub trait PropertyValue {
     type PropertyType;
     type ValueType;
-
     fn property(&self) -> &Self::PropertyType;
     fn value(&self) -> &Self::ValueType;
 }
-
-pub trait Parent {
-    type Type;
-    fn parent(&self) -> &Self::Type;
-}
-pub trait Child {
-    type Type;
-    fn child(&self) -> &Self::Type;
-}
-pub trait ParseCompile {
+pub trait Parse {
     type Error;
     fn parse(src: crate::lex::Tokens) -> Result<Box<Self>, Self::Error>;
 }
@@ -27,7 +17,7 @@ pub trait Resource: Sized {
 pub trait Asset: Resource + Sized {
     fn src(src: &String, options: Self::Options) -> Result<Self, Self::Error>;
 }
-pub trait Builder {
+pub trait ResourceBuilder {
     type Resource: Resource;
     type Error;
     fn build(&self) -> Result<Self::Resource, Self::Error>;
