@@ -1,7 +1,33 @@
+use std::ops::{Index, IndexMut};
 
+#[derive(Debug,Clone,PartialEq,Eq)]
+pub struct Tokens {
+    vec: Vec<Token>
+}
+impl Tokens {
+    pub fn new() -> Self {
+        Self { vec: vec![] }
+    }
+    pub fn push(&mut self, val: Token) {
+        self.vec.push(val);
+    }
+}
+impl From<Vec<Token>> for Tokens { fn from(vec: Vec<Token>) -> Self { Self { vec } } }
+impl Into<Vec<Token>> for Tokens { fn into(self) -> Vec<Token> { self.vec } }
+impl IndexMut<usize> for Tokens { fn index_mut(&mut self, index: usize) -> &mut Self::Output { self.vec.index_mut(index) } }
+impl Index<usize> for Tokens {
+    type Output = Token;
+    fn index(&self, index: usize) -> &Self::Output { self.vec.index(index) }
+}
+impl IntoIterator for Tokens {
+    type Item = Token;
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+    fn into_iter(self) -> Self::IntoIter {
+        return self.vec.into_iter()
+    }
+}
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Indent { NewLine, Tab, Space }
-
 #[derive(Debug, Clone)]
 pub enum Token {
     Identifior(String),
@@ -13,7 +39,7 @@ pub enum Token {
     Other(String),
     None,
 }
-
+impl Eq for Token {}
 #[derive(Debug, Copy, Clone)]
 pub struct IndentMode {
     pub spaces: bool,
@@ -90,8 +116,8 @@ impl Token {
             _ => { false }
         }
     }
-    pub fn parse(src: &String, mode: Mode) -> Option<Vec<Token>> {
-        let mut tokens = Vec::new();
+    pub fn parse(src: &String, mode: Mode) -> Option<Tokens> {
+        let mut tokens = Tokens::new();
         let mut str = String::new();
         /* 
             0 => Undecided
@@ -263,7 +289,7 @@ fn pop(state: u8, str: &String) -> (bool, Token) {
 }
 
 #[inline]
-fn push(c: char, change: u8, state: &mut u8, tokens: &mut Vec<Token>, str: &mut String, mode: Mode) -> bool {
+fn push(c: char, change: u8, state: &mut u8, tokens: &mut Tokens, str: &mut String, mode: Mode) -> bool {
     if change > 0 && change < 255 {
         let (ok, res) = pop(*state, &str);
         if !ok { return true; }
