@@ -1,4 +1,4 @@
-pub mod properties;
+pub mod bg;
 
 use std::{collections::BTreeMap, io::Read};
 use crate::{lex::{IndentMode, Token}, traits::Resource};
@@ -7,7 +7,7 @@ use crate::{lex::{IndentMode, Token}, traits::Resource};
     Style-rule data structures
 */
 pub enum Property {
-    Background(properties::Background)
+    Background(bg::Background)
 }
 
 pub enum Value {
