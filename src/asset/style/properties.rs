@@ -36,6 +36,9 @@ pub enum PositionValue {
 pub enum BackgroundAttachment { Scroll,Fixed,Local }
 pub enum BackgroundBlendMode { Normal,Multiply,Screen,Overlay,Darken,Lighten,ColorDodge,Saturation,Color,Luminosity }
 pub enum BackgroundClip { BorderBox,PaddingBox,ContentBox }
+pub enum BackgroundOrigin { BorderBox,PaddingBox,ContentBox }
+pub enum BackgroundRepeat { Repeat, RepeatX, RepeatY, NoRepeat, Space, Round }
+pub enum BackgroundSize { Auto, Cover, Contain, Percentage(f64), Length(f64, Option<f64>) }
 pub enum BackgroundImage {
     Url(String),None,
     ConicGradient(ConicGradient),
@@ -49,4 +52,7 @@ pub struct Background {
     pub attachment: BackgroundAttachment,
     pub blend_mode: BackgroundBlendMode,
     pub clip: BackgroundClip,
+    pub origin: BackgroundOrigin,
+    pub repeat: BackgroundRepeat,
+    pub size: BackgroundSize
 }
