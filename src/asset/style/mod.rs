@@ -3,9 +3,6 @@ pub mod bg;
 use std::{collections::BTreeMap, io::Read};
 use crate::{lex, traits::Resource};
 
-/*
-    Style-rule data structures
-*/
 #[derive(Debug,Clone)]
 pub enum Property {
     Background(bg::BackgroundProperty)
@@ -17,29 +14,21 @@ pub struct Rule {
     property: Property,
     value: Value
 }
-
 impl crate::traits::PropertyValue for Rule {
     type PropertyType = Property;
     type ValueType = Value;
-
     fn property(&self) -> &Property { &self.property }
     fn value(&self) -> &Value { &self.value }
 }
-
-/*
-    Style Selector
-*/
 #[derive(Debug,Clone)]
 pub struct Selector {
     pub(crate) name: String,
     pub(crate) parent: Option<Box<Selector>>
 }
-
-impl Selector {
-    pub fn empty() -> Self {
-        Self { name: String::new(), parent: None }
-    }
-    pub fn construct(&self) -> String {
+impl Selector { pub fn empty() -> Self { Self { name: String::new(), parent: None } } }
+impl crate::traits::Name for Selector { fn name(&self) -> &String { &self.name } }
+impl ToString for Selector {
+    fn to_string(&self) -> String {
         let mut str = self.name.clone();
         let mut parent = &self.parent;
         while self.parent.is_some() {
@@ -50,33 +39,20 @@ impl Selector {
         return str;
     }
 }
-impl crate::traits::Name for Selector {
-    fn name(&self) -> &String { &self.name }
-}
-
-/*
-    Style struct
-*/
 #[derive(Debug,Clone)]
 pub struct Asset {
     name: String,
     rules: BTreeMap<Selector, Vec<Rule>>,
 }
-
-pub enum Error {
-    IOError(std::io::Error),
-    SyntaxError,
-    Unknown
-}
+#[derive(Debug)]
+pub enum Error { IOError(std::io::Error),SyntaxError,InvalidValue,Unknown }
 
 impl Asset {
     const VALS: [char; 2] = ['$', '-'];
     const MODE_NORM: crate::lex::Mode = crate::lex::Mode { strict_literals: false, schar_identp: true, indents: lex::IndentMode::min(), schar_vals: Some(&Self::VALS) };
     const MODE_SASSY: crate::lex::Mode = crate::lex::Mode { strict_literals: false, schar_identp: true, indents: lex::IndentMode::strong(), schar_vals: Some(&Self::VALS) };
     pub fn rules(&self) -> &BTreeMap<Selector, Vec<Rule>> { &self.rules }
-    
 }
-
 impl Resource for Asset {
     type Error = Error;
     type Options = bool;
@@ -118,9 +94,8 @@ impl Resource for Asset {
                     };
                     if i.is_some() {
                         let i = i.unwrap();
-                        if selector.name.is_empty() {
-                            selector.name = i.clone();
-                        } else {
+                        if selector.name.is_empty() { selector.name = i.clone(); }
+                        else {
                             let new_selector = Selector { name: n.clone(), parent: Some(Box::from(selector)) };
                             selector = new_selector;
                         }
@@ -129,17 +104,12 @@ impl Resource for Asset {
                 }
                 crate::lex::Token::Indent(i) => {
                     if i == crate::lex::Indent::NewLine && !is_value { is_selector = true; }
-                    if !sassy {
-                        is_value = false;
-                        continue;
-                    }
+                    if !sassy { is_value = false; continue; }
                 }
                 crate::lex::Token::Other(c) => {
                     if sassy { return Err(Error::SyntaxError); }
                     match c.as_str() {
-                        "{" => {
-                            block_indent+=1;
-                        }
+                        "{" => block_indent+=1,
                         "}" => {
                             if block_indent == 0 { return Err(Error::SyntaxError); }
                             block_indent-=1;
@@ -150,9 +120,7 @@ impl Resource for Asset {
                                 is_selector = false;
                             }
                             let ident = last_tok.identifier();
-                            if ident.is_some() {
-                                
-                            }
+                            if ident.is_some() {}
                         }
                         _ => {}
                     }
@@ -164,7 +132,4 @@ impl Resource for Asset {
         Ok(Self { name: String::from(path.file_name().unwrap().to_string_lossy()), rules })
     }
 }
-
-impl crate::traits::Name for Asset {
-    fn name(&self) -> &String { &self.name }
-}
+impl crate::traits::Name for Asset { fn name(&self) -> &String { &self.name } }

@@ -14,10 +14,11 @@ pub trait Resource: Sized {
     type Options;
     fn file(path: &std::path::Path, options: Self::Options) -> Result<Self, Self::Error>;
 }
-pub trait Asset: Resource + Sized {
+pub trait Asset: Resource + Sized {}
+pub trait Document: Resource + Sized {
     fn src(src: &String, options: Self::Options) -> Result<Self, Self::Error>;
 }
-pub trait ResourceBuilder {
+pub trait Builder {
     type Resource: Resource;
     type Error;
     fn build(&self) -> Result<Self::Resource, Self::Error>;
