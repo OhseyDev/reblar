@@ -1,7 +1,7 @@
 pub mod bg;
 
 use std::{collections::BTreeMap, io::Read};
-use crate::{lex, traits::Resource};
+use crate::{lex, traits::{Resource, Parse}};
 
 #[derive(Debug,Clone)]
 pub enum Property {
@@ -19,6 +19,13 @@ impl crate::traits::PropertyValue for Rule {
     type ValueType = Value;
     fn property(&self) -> &Property { &self.property }
     fn value(&self) -> &Value { &self.value }
+}
+#[derive(Debug)]
+pub enum Error { IOError(std::io::Error),SyntaxError,InvalidValue,InvalidProperty,Unknown }
+#[derive(Debug,Clone)]
+pub struct Asset {
+    name: String,
+    rules: BTreeMap<Selector, Vec<Rule>>,
 }
 #[derive(Debug,Clone)]
 pub struct Selector {
@@ -39,14 +46,14 @@ impl ToString for Selector {
         return str;
     }
 }
-#[derive(Debug,Clone)]
-pub struct Asset {
-    name: String,
-    rules: BTreeMap<Selector, Vec<Rule>>,
+impl crate::traits::Parse<String> for Property {
+    type Error = Error;
+    fn parse(src: String) -> Result<Box<Self>, Self::Error> {
+        match src {
+            _ => Err(Error::InvalidProperty)
+        }
+    }
 }
-#[derive(Debug)]
-pub enum Error { IOError(std::io::Error),SyntaxError,InvalidValue,Unknown }
-
 impl Asset {
     const VALS: [char; 2] = ['$', '-'];
     const MODE_NORM: crate::lex::Mode = crate::lex::Mode { strict_literals: false, schar_identp: true, indents: lex::IndentMode::min(), schar_vals: Some(&Self::VALS) };
@@ -78,16 +85,19 @@ impl Resource for Asset {
         };
         let rules = BTreeMap::new();
         let mut selector = Selector::empty();
-        let mut ident: Option<String> = None;
         let mut block_indent = 0 as u8;
         let mut is_selector = false;
         let mut is_value = false;
         let mut append_selector = false;
+        let mut property = None;
         let mut last_tok = lex::Token::None;
         for token in tokens {
+            if property.is_some() {
+                continue;
+            }
             match token.clone() {
                 crate::lex::Token::Identifior(n) => {
-                    let i = ident.as_ref();
+                    let i = last_tok.identifier();
                     let n = {
                         if append_selector { ":".to_owned() + n.as_str() }
                         else { n.clone() }
@@ -95,32 +105,35 @@ impl Resource for Asset {
                     if i.is_some() {
                         let i = i.unwrap();
                         if selector.name.is_empty() { selector.name = i.clone(); }
-                        else {
-                            let new_selector = Selector { name: n.clone(), parent: Some(Box::from(selector)) };
-                            selector = new_selector;
-                        }
+                        else { selector = Selector { name: n.clone(), parent: Some(Box::from(selector)) }; }
                     }
-                    ident = Some(n.clone());
                 }
                 crate::lex::Token::Indent(i) => {
                     if i == crate::lex::Indent::NewLine && !is_value { is_selector = true; }
                     if !sassy { is_value = false; continue; }
                 }
                 crate::lex::Token::Other(c) => {
-                    if sassy { return Err(Error::SyntaxError); }
                     match c.as_str() {
-                        "{" => block_indent+=1,
+                        "{" => {
+                            if sassy { return Err(Error::SyntaxError); }
+                            block_indent+=1
+                        }
                         "}" => {
-                            if block_indent == 0 { return Err(Error::SyntaxError); }
+                            if block_indent == 0 || sassy { return Err(Error::SyntaxError); }
                             block_indent-=1;
                         }
                         ":" => {
                             if is_selector {
                                 append_selector = true;
                                 is_selector = false;
+                                continue;
                             }
                             let ident = last_tok.identifier();
-                            if ident.is_some() {}
+                            if ident.is_some() {
+                                let prop = Property::parse(ident.unwrap());
+                                if prop.is_err() { return Err(prop.err().unwrap()) }
+                                property = Some(prop.unwrap());
+                            }
                         }
                         _ => {}
                     }

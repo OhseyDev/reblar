@@ -6,7 +6,7 @@ fn loose() {
     let act_res = lex::Token::parse(&"hello14641\"hey friend\"".to_string(), mode);
     let exp_res = lex::Tokens::from(vec![
         lex::Token::Identifior("hello14641".to_string()),
-        lex::Token::StrLiteral("hey friend".to_string())
+        lex::Token::Literal(lex::Literal::String("hey friend".to_string()))
     ]);
     assert_eq!(Some(exp_res), act_res);
 }
@@ -18,8 +18,8 @@ fn strict() {
     let exp_res = lex::Tokens::from(vec![
         lex::Token::Identifior("hello14641".to_string()),
         lex::Token::Indent(Indent::NewLine),
-        lex::Token::StrLiteral("hey\tfriend".to_string()),
-        lex::Token::CharLiteral('c')
+        lex::Token::Literal(lex::Literal::String("hey\tfriend".to_string())),
+        lex::Token::Literal(lex::Literal::Character('c'))
     ]);
     assert_eq!(Some(exp_res), act_res);
 }

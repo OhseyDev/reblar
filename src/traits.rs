@@ -5,9 +5,9 @@ pub trait PropertyValue {
     fn property(&self) -> &Self::PropertyType;
     fn value(&self) -> &Self::ValueType;
 }
-pub trait Parse {
+pub trait Parse<T: Sized> {
     type Error;
-    fn parse(src: crate::lex::Tokens) -> Result<Box<Self>, Self::Error>;
+    fn parse(src: T) -> Result<Box<Self>, Self::Error>;
 }
 pub trait Resource: Sized {
     type Error;

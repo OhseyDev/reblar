@@ -5,12 +5,8 @@ pub struct Tokens {
     vec: Vec<Token>
 }
 impl Tokens {
-    pub fn new() -> Self {
-        Self { vec: vec![] }
-    }
-    pub fn push(&mut self, val: Token) {
-        self.vec.push(val);
-    }
+    pub fn new() -> Self { Self { vec: vec![] } }
+    pub fn push(&mut self, val: Token) { self.vec.push(val); }
 }
 impl From<Vec<Token>> for Tokens { fn from(vec: Vec<Token>) -> Self { Self { vec } } }
 impl Into<Vec<Token>> for Tokens { fn into(self) -> Vec<Token> { self.vec } }
@@ -26,15 +22,22 @@ impl IntoIterator for Tokens {
         return self.vec.into_iter()
     }
 }
-impl ToString for crate::lex::Tokens {
+impl ToString for Literal {
+    fn to_string(&self) -> String {
+        match self {
+            Literal::Character(c) => format!("{}", c),
+            Literal::Floater(f) => format!("{}", f),
+            Literal::Integer(i) => format!("{}", i),
+            Literal::String(s) => s.clone()
+        }
+    }
+}
+impl ToString for Tokens {
     fn to_string(&self) -> String {
         let mut str = String::new();
         for token in self.vec.clone() {
             match token {
-                Token::CharLiteral(c) => { str += format!("\"{}\"", c).as_str(); }
-                Token::StrLiteral(s) => { str += format!("\"{}\"", s).as_str(); }
-                Token::Floater(f) => { str += f.to_string().as_str() }
-                Token::Integer(i) => { str += i.to_string().as_str() }
+                Token::Literal(lit) => { str += format!("\"{}\"", lit.to_string()).as_str(); }
                 Token::Identifior(ident) => { str += ident.as_str() }
                 Token::Indent(indent) => {
                     match indent {
@@ -44,6 +47,8 @@ impl ToString for crate::lex::Tokens {
                     }
                 }
                 Token::Other(s) => { str += s.as_str(); }
+                Token::OpenBracket => { str.insert(str.chars().count(), '('); }
+                Token::CloseBracket => { str.insert(str.chars().count(), ')'); }
                 Token::None => { continue }
             }
         }
@@ -52,15 +57,14 @@ impl ToString for crate::lex::Tokens {
 }
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Indent { NewLine, Tab, Space }
+#[derive(Debug, Clone, PartialEq)]
+pub enum Literal { String(String),Integer(i64),Floater(f64),Character(char) }
 #[derive(Debug, Clone)]
 pub enum Token {
     Identifior(String),
-    Integer(i64),
-    Floater(f64),
-    StrLiteral(String),
-    CharLiteral(char),
-    Indent(Indent),
-    Other(String),
+    Literal(Literal),
+    Indent(Indent),Other(String),
+    OpenBracket,CloseBracket,
     None,
 }
 impl Eq for Token {}
@@ -104,27 +108,9 @@ impl Token {
             _ => None
         }
     }
-    pub fn char_lit(&self) -> Option<char> {
+    pub fn literal(&self) -> Option<Literal> {
         match self {
-            Self::CharLiteral(c) => Some(*c),
-            _ => None
-        }
-    }
-    pub fn str_lit(&self) -> Option<String> {
-        match self {
-            Self::StrLiteral(str) => Some(str.clone()),
-            _ => None
-        }
-    }
-    pub fn floater(&self) -> Option<f64> {
-        match self {
-            Self::Floater(f) => Some(*f),
-            _ => None
-        }
-    }
-    pub fn integer(&self) -> Option<i64> {
-        match self {
-            Self::Integer(i) => Some(*i),
+            Self::Literal(lit) => Some(lit.clone()),
             _ => None
         }
     }
@@ -136,8 +122,20 @@ impl Token {
     }
     pub fn none(&self) -> bool {
         match self {
-            Self::None => { true }
-            _ => { false }
+            Self::None => true,
+            _ => false
+        }
+    }
+    pub fn cbracket(&self) -> bool {
+        match self {
+            Self::CloseBracket => true,
+            _ => false
+        }
+    }
+    pub fn obracket(&self) -> bool {
+        match self {
+            Self::OpenBracket => true,
+            _ => false
         }
     }
     pub fn parse(src: &String, mode: Mode) -> Option<Tokens> {
@@ -220,25 +218,10 @@ impl PartialEq for Token {
                 if ident.is_none() { return false; }
                 ident.unwrap() == *n
             }
-            Self::CharLiteral(c) => {
-                let c_lit = self.char_lit();
-                if c_lit.is_none() { return false; }
-                c_lit.unwrap() == *c
-            }
-            Self::Floater(f) => {
-                let floater = self.floater();
-                if floater.is_none() { return false }
-                floater.unwrap() == *f
-            }
-            Self::Integer(i) => {
-                let integer = self.integer();
-                if integer.is_none() { return false }
-                integer.unwrap() == *i
-            }
-            Self::StrLiteral(str) => {
-                let str_lit = self.str_lit();
-                if str_lit.is_none() { return false }
-                str_lit.unwrap() == *str
+            Self::Literal(literal) => {
+                let o_lit = self.literal();
+                if o_lit.is_none() { return false; }
+                o_lit.unwrap() == *literal
             }
             Self::Other(c) => {
                 let other = self.other();
@@ -251,6 +234,8 @@ impl PartialEq for Token {
                 other.unwrap() == *i
             }
             Self::None => { self.none() }
+            Self::CloseBracket => self.cbracket(),
+            Self::OpenBracket => self.obracket()
         }
     }
 }
@@ -297,14 +282,14 @@ fn proc_dot(state: u8) -> u8 {
 fn pop(state: u8, str: &String) -> (bool, Token) {
     if str.is_empty() { return (true, Token::None); }
     match state {
-        1 => { (true, Token::Integer(str.parse().unwrap())) }
+        1 => { (true, Token::Literal(Literal::Integer(str.parse().unwrap()))) }
         2 => { (true, Token::Identifior(str.clone())) }
-        3 => { (true, Token::Floater(str.parse().unwrap())) }
+        3 => { (true, Token::Literal(Literal::Floater(str.parse().unwrap()))) }
         5 => {
             if str.len() > 1 { return (false, Token::None); }
-            (true, Token::CharLiteral(str.chars().next().unwrap()))
+            (true, Token::Literal(Literal::Character(str.chars().next().unwrap())))
         }
-        6 => { (true, Token::StrLiteral(str.clone())) }
+        6 => { (true, Token::Literal(Literal::String(str.clone()))) }
         8 => { (true, Token::Indent(Indent::NewLine)) }
         9 => { (true, Token::Indent(Indent::Tab)) }
         10 => { (true, Token::Indent(Indent::Space)) }
