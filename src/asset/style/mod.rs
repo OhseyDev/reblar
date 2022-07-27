@@ -5,7 +5,7 @@ use crate::{lex, traits::{Resource, Parse}};
 
 #[derive(Debug,Clone)]
 pub enum Property {
-    Background(bg::BackgroundProperty)
+    Background(Option<bg::BackgroundProperty>)
 }
 #[derive(Debug,Clone)]
 pub enum Value {}
@@ -49,7 +49,16 @@ impl ToString for Selector {
 impl crate::traits::Parse<String> for Property {
     type Error = Error;
     fn parse(src: String) -> Result<Box<Self>, Self::Error> {
-        match src {
+        match src.as_str() {
+            "background" => Ok(Box::from(Self::Background(None))),
+            "background-attachment" => Ok(Box::from(Self::Background(Some(bg::BackgroundProperty::Attachment)))),
+            "background-blend-mode" => Ok(Box::from(Self::Background(Some(bg::BackgroundProperty::BlendMode)))),
+            "background-clip" => Ok(Box::from(Self::Background(Some(bg::BackgroundProperty::Clip)))),
+            "background-color" => Ok(Box::from(Self::Background(Some(bg::BackgroundProperty::Color)))),
+            "background-image" => Ok(Box::from(Self::Background(Some(bg::BackgroundProperty::Image)))),
+            "background-origin" => Ok(Box::from(Self::Background(Some(bg::BackgroundProperty::Origin)))),
+            "background-repeat" => Ok(Box::from(Self::Background(Some(bg::BackgroundProperty::Repeat)))),
+            "background-size" => Ok(Box::from(Self::Background(Some(bg::BackgroundProperty::Size)))),
             _ => Err(Error::InvalidProperty)
         }
     }
@@ -93,6 +102,7 @@ impl Resource for Asset {
         let mut last_tok = lex::Token::None;
         for token in tokens {
             if property.is_some() {
+                parse_value(&token, );
                 continue;
             }
             match token.clone() {
@@ -146,3 +156,11 @@ impl Resource for Asset {
     }
 }
 impl crate::traits::Name for Asset { fn name(&self) -> &String { &self.name } }
+
+#[inline]
+fn parse_value(token: &lex::Token) {
+    match token {
+        lex::Token::CloseBracket => {}
+        _ => {}
+    }
+}
