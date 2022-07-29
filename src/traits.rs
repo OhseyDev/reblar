@@ -23,7 +23,3 @@ pub trait Compliant {
     type Suggestions: Iterator;
     fn compliant(&self) -> Option<Self::Suggestions>;
 }
-pub trait Secure {
-    type Problems: Iterator;
-    fn secure(&self) -> Option<Self::Problems>;
-}
