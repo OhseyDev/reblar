@@ -47,17 +47,18 @@ impl ToString for Selector {
     }
 }
 impl FromStr for Property {
-    fn from_str(s: &str) -> Result<Box<Self>, Error> {
-        match src.as_str() {
-            "background" => Ok(Box::from(Self::Background(None))),
-            "background-attachment" => Ok(Box::from(Self::Background(Some(bg::BackgroundProperty::Attachment)))),
-            "background-blend-mode" => Ok(Box::from(Self::Background(Some(bg::BackgroundProperty::BlendMode)))),
-            "background-clip" => Ok(Box::from(Self::Background(Some(bg::BackgroundProperty::Clip)))),
-            "background-color" => Ok(Box::from(Self::Background(Some(bg::BackgroundProperty::Color)))),
-            "background-image" => Ok(Box::from(Self::Background(Some(bg::BackgroundProperty::Image)))),
-            "background-origin" => Ok(Box::from(Self::Background(Some(bg::BackgroundProperty::Origin)))),
-            "background-repeat" => Ok(Box::from(Self::Background(Some(bg::BackgroundProperty::Repeat)))),
-            "background-size" => Ok(Box::from(Self::Background(Some(bg::BackgroundProperty::Size)))),
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Property, Self::Err> {
+        match s {
+            "background" => Ok(Self::Background(None)),
+            "background-attachment" => Ok(Self::Background(Some(bg::BackgroundProperty::Attachment))),
+            "background-blend-mode" => Ok(Self::Background(Some(bg::BackgroundProperty::BlendMode))),
+            "background-clip" => Ok(Self::Background(Some(bg::BackgroundProperty::Clip))),
+            "background-color" => Ok(Self::Background(Some(bg::BackgroundProperty::Color))),
+            "background-image" => Ok(Self::Background(Some(bg::BackgroundProperty::Image))),
+            "background-origin" => Ok(Self::Background(Some(bg::BackgroundProperty::Origin))),
+            "background-repeat" => Ok(Self::Background(Some(bg::BackgroundProperty::Repeat))),
+            "background-size" => Ok(Self::Background(Some(bg::BackgroundProperty::Size))),
             _ => Err(Error::InvalidProperty)
         }
     }
@@ -139,7 +140,7 @@ impl Resource for Asset {
                             }
                             let ident = last_tok.identifier();
                             if ident.is_some() {
-                                let prop = Property::parse(ident.unwrap());
+                                let prop = Property::from_str(ident.unwrap().as_str());
                                 if prop.is_err() { return Err(prop.err().unwrap()) }
                                 property = Some(prop.unwrap());
                             }
