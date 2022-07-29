@@ -5,21 +5,25 @@ pub trait PropertyValue {
     fn property(&self) -> &Self::PropertyType;
     fn value(&self) -> &Self::ValueType;
 }
-pub trait Parse<T: Sized> {
-    type Error;
-    fn parse(src: T) -> Result<Box<Self>, Self::Error>;
-}
-pub trait Resource: Sized {
+pub trait Resource: Name + Sized {
     type Error;
     type Options;
     fn file(path: &std::path::Path, options: Self::Options) -> Result<Self, Self::Error>;
 }
-pub trait Asset: Resource + Sized {}
-pub trait Document: Resource + Sized {
+pub trait Asset: Resource {}
+pub trait Document: Resource {
     fn src(src: &String, options: Self::Options) -> Result<Self, Self::Error>;
 }
 pub trait Builder {
     type Resource: Resource;
     type Error;
     fn build(&self) -> Result<Self::Resource, Self::Error>;
+}
+pub trait Compliant {
+    type Suggestions: Iterator;
+    fn compliant(&self) -> Option<Self::Suggestions>;
+}
+pub trait Secure {
+    type Problems: Iterator;
+    fn secure(&self) -> Option<Self::Problems>;
 }

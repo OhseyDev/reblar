@@ -1,7 +1,7 @@
 pub mod bg;
 
-use std::{collections::BTreeMap, io::Read};
-use crate::{lex, traits::{Resource, Parse}};
+use std::{collections::BTreeMap, io::Read, str::FromStr};
+use crate::{lex, traits::{Resource}};
 
 #[derive(Debug,Clone)]
 pub enum Property {
@@ -46,9 +46,8 @@ impl ToString for Selector {
         return str;
     }
 }
-impl crate::traits::Parse<String> for Property {
-    type Error = Error;
-    fn parse(src: String) -> Result<Box<Self>, Self::Error> {
+impl FromStr for Property {
+    fn from_str(s: &str) -> Result<Box<Self>, Error> {
         match src.as_str() {
             "background" => Ok(Box::from(Self::Background(None))),
             "background-attachment" => Ok(Box::from(Self::Background(Some(bg::BackgroundProperty::Attachment)))),
