@@ -13,6 +13,18 @@ Lightweight full-stack web library for efficient web service written for large-s
 
 - Minimalism
 - Pre-compilation
+- Strict compliance of standards
+
+## Dev Tools
+
+- Compliance validator
+- Basic static web server
+- Versatile preprocessor
+
+### Preprocessor
+
+- Check for safety
+- Upload to CDN
 
 ### Update
 
