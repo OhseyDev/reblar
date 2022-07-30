@@ -1,12 +1,11 @@
 use std::ops::{Index, IndexMut};
 
 #[derive(Debug,Clone,PartialEq,Eq)]
-pub struct Tokens {
-    vec: Vec<Token>
-}
+pub struct Tokens { vec: Vec<Token> }
 impl Tokens {
     pub fn new() -> Self { Self { vec: vec![] } }
     pub fn push(&mut self, val: Token) { self.vec.push(val); }
+    pub fn len(&self) -> usize { self.vec.len() }
 }
 impl From<Vec<Token>> for Tokens { fn from(vec: Vec<Token>) -> Self { Self { vec } } }
 impl Into<Vec<Token>> for Tokens { fn into(self) -> Vec<Token> { self.vec } }
@@ -141,17 +140,6 @@ impl Token {
     pub fn parse(src: &String, mode: Mode) -> Option<Tokens> {
         let mut tokens = Tokens::new();
         let mut str = String::new();
-        /* 
-            0 => Undecided
-            1 => Number
-            2 => Identifier
-            3 => Decimal Number
-            4 => Undecided Dot
-            5 => Character Literal
-            6 => String Literal
-            7 => Reserved
-            8 => Indent
-        */
         let mut state = 0 as u8;
         let mut last_c = '\0';
         for c in src.chars() {

@@ -1,3 +1,5 @@
+use super::{ParseState, InnerParseOutput, Value};
+
 #[derive(Debug,Clone,PartialEq)]
 pub enum Color {
     RGB(f64,f64,f64),RGBA(f64,f64,f64,f64),
@@ -79,15 +81,26 @@ pub struct Background {
 pub enum BackgroundProperty { Color,Image,Attachment,BlendMode,Clip,Origin,Repeat,Size }
 #[derive(Debug,Clone,PartialEq)]
 pub enum BackgroundValue { Color(BackgroundColor),Image(BackgroundImage), }
+impl Into<Value> for BackgroundValue { fn into(self) -> Value { Value::Background(self) } }
 
-pub(crate) fn root(token: &crate::lex::Token) -> Option<BackgroundValue> {
+fn root(state: &ParseState, token: &crate::lex::Token) -> InnerParseOutput {
+    let new_state = state.to_owned();
     match token {
-        _ => None
+        _ => return (new_state, None)
     }
 }
 
-pub(crate) fn image(token: &crate::lex::Token) -> Option<BackgroundImage> {
+#[inline]
+pub(crate) fn parse(state: &ParseState, property: &Option<BackgroundProperty>, token: &crate::lex::Token) -> InnerParseOutput {
+    match property {
+        &Some(BackgroundProperty::Image) => image(state, token),
+        _ => root(state, token)
+    }
+}
+#[inline]
+fn image(state: &ParseState, token: &crate::lex::Token) -> InnerParseOutput {
+    let new_state = state.to_owned();
     match token {
-        _ => None
+        _ => (new_state, None)
     }
 }
