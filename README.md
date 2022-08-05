@@ -5,7 +5,7 @@ Lightweight full-stack web library for efficient web service written for large-s
 ## Support for
 
 - Markdown
-- CSS
+- Sass/scss
 - TypeScript
 - WebAssembly
 
