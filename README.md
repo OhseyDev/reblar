@@ -1,6 +1,6 @@
 # reblar
 
-Lightweight full-stack web library for efficient web service written for large-scale applications... and hating on JavaScript.
+Full-stack web and application development toolkit.
 
 ## Support for
 
