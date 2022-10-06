@@ -8,7 +8,9 @@ pub trait PropertyValue {
 pub trait Resource: Name + Sized {
     type Error;
     type Options;
+    type Source;
     fn file(path: &std::path::Path, options: Self::Options) -> Result<Self, Self::Error>;
+    fn src(src: &Self::Source, options: Self::Options) -> Result<Self, Self::Error>;
 }
 pub trait Asset: Resource {}
 pub trait Document: Resource {

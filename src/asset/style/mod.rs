@@ -15,9 +15,14 @@ pub(crate) struct ParseState {
     */
     pub status: u8,
     pub ok: bool,
-    pub last_tok: lex::Token
+    pub last_tok: lex::Token,
 }
 pub(crate) type InnerParseOutput = (ParseState, Option<Value>);
+#[derive(Debug, Clone, PartialEq)]
+pub struct Options {
+    pub sassy: bool,
+    pub name: super::AssetName,
+}
 #[derive(Debug, Clone)]
 pub enum Property {
     Background(Option<bg::BackgroundProperty>),
@@ -33,14 +38,22 @@ pub struct Rule {
 }
 impl Default for ParseState {
     fn default() -> Self {
-        ParseState { status: 0x01, ok: true, last_tok: lex::Token::None }
+        ParseState {
+            status: 0x01,
+            ok: true,
+            last_tok: lex::Token::None,
+        }
     }
 }
 impl crate::traits::PropertyValue for Rule {
     type PropertyType = Property;
     type ValueType = Value;
-    fn property(&self) -> &Property { &self.property }
-    fn value(&self) -> &Value { &self.value }
+    fn property(&self) -> &Property {
+        &self.property
+    }
+    fn value(&self) -> &Value {
+        &self.value
+    }
 }
 #[derive(Debug)]
 pub enum Error {
@@ -48,6 +61,7 @@ pub enum Error {
     SyntaxError,
     InvalidValue,
     InvalidProperty,
+    InvalidOption,
     Unknown,
 }
 #[derive(Debug, Clone)]
@@ -68,8 +82,54 @@ impl Selector {
         }
     }
 }
-impl crate::traits::Name for Asset { fn name(&self) -> &String { &self.name } }
-impl crate::traits::Name for Selector { fn name(&self) -> &String { &self.name } }
+impl Options {
+    pub fn sassy() -> Options {
+        Options {
+            sassy: true,
+            name: super::AssetName::FileName,
+        }
+    }
+    pub fn sassy_name(name: String) -> Options {
+        Options {
+            sassy: true,
+            name: super::AssetName::Str(name),
+        }
+    }
+    pub fn sassy_nameless() -> Options {
+        Options {
+            sassy: true,
+            name: super::AssetName::Empty,
+        }
+    }
+    pub fn default() -> Options {
+        Options {
+            sassy: false,
+            name: super::AssetName::FileName,
+        }
+    }
+    pub fn default_name(name: String) -> Options {
+        Options {
+            sassy: false,
+            name: super::AssetName::Str(name),
+        }
+    }
+    pub fn default_nameless() -> Options {
+        Options {
+            sassy: false,
+            name: super::AssetName::Empty,
+        }
+    }
+}
+impl crate::traits::Name for Asset {
+    fn name(&self) -> &String {
+        &self.name
+    }
+}
+impl crate::traits::Name for Selector {
+    fn name(&self) -> &String {
+        &self.name
+    }
+}
 impl ToString for Selector {
     fn to_string(&self) -> String {
         let mut str = self.name.clone();
@@ -87,8 +147,12 @@ impl FromStr for Property {
     fn from_str(s: &str) -> Result<Property, Self::Err> {
         match s {
             "background" => Ok(Self::Background(None)),
-            "background-attachment" => Ok(Self::Background(Some(bg::BackgroundProperty::Attachment))),
-            "background-blend-mode" => Ok(Self::Background(Some(bg::BackgroundProperty::BlendMode))),
+            "background-attachment" => {
+                Ok(Self::Background(Some(bg::BackgroundProperty::Attachment)))
+            }
+            "background-blend-mode" => {
+                Ok(Self::Background(Some(bg::BackgroundProperty::BlendMode)))
+            }
             "background-clip" => Ok(Self::Background(Some(bg::BackgroundProperty::Clip))),
             "background-color" => Ok(Self::Background(Some(bg::BackgroundProperty::Color))),
             "background-image" => Ok(Self::Background(Some(bg::BackgroundProperty::Image))),
@@ -101,31 +165,63 @@ impl FromStr for Property {
 }
 impl Asset {
     const VALS: [char; 2] = ['$', '-'];
-    const MODE_NORM:crate::lex::Mode=crate::lex::Mode{strict_literals:false,schar_identp:true,indents:lex::IndentMode::min(),schar_vals:Some(&Self::VALS)};
-    const MODE_SASSY:crate::lex::Mode=crate::lex::Mode{strict_literals:false,schar_identp:true,indents:lex::IndentMode::strong(),schar_vals:Some(&Self::VALS)};
-    pub fn rules(&self) -> &BTreeMap<Selector, Vec<Rule>> { &self.rules }
+    const MODE_NORM: crate::lex::Mode = crate::lex::Mode {
+        strict_literals: false,
+        schar_identp: true,
+        indents: lex::IndentMode::min(),
+        schar_vals: Some(&Self::VALS),
+    };
+    const MODE_SASSY: crate::lex::Mode = crate::lex::Mode {
+        strict_literals: false,
+        schar_identp: true,
+        indents: lex::IndentMode::strong(),
+        schar_vals: Some(&Self::VALS),
+    };
+    pub fn rules(&self) -> &BTreeMap<Selector, Vec<Rule>> {
+        &self.rules
+    }
 }
 impl Resource for Asset {
     type Error = Error;
-    type Options = bool;
-    fn file(path: &std::path::Path, sassy: bool) -> Result<Self, Self::Error> {
+    type Options = Options;
+    type Source = String;
+    fn file(path: &std::path::Path, mut options: Options) -> Result<Self, Self::Error> {
         let mut file = {
             let f = std::fs::File::open(path);
-            if f.is_err() { return Err(Error::IOError(f.err().unwrap())); }
+            if f.is_err() {
+                return Err(Error::IOError(f.err().unwrap()));
+            }
             f.unwrap()
         };
         let (src, _len) = {
             let mut src = String::new();
             let res = file.read_to_string(&mut src);
-            if res.is_err() { return Err(Error::IOError(res.err().unwrap())); }
+            if res.is_err() {
+                return Err(Error::IOError(res.err().unwrap()));
+            }
             (src, res.unwrap())
         };
+        match options.name {
+            super::AssetName::FileName => {
+                options.name =
+                    super::AssetName::Str(String::from(path.file_name().unwrap().to_string_lossy()))
+            }
+            _ => {}
+        }
+        Self::src(&src, options)
+    }
+    fn src(src: &Self::Source, options: Self::Options) -> Result<Self, Self::Error> {
         let tokens = {
             let mode;
-            if sassy { mode = Self::MODE_SASSY; }
-            else { mode = Self::MODE_NORM; }
+            if options.sassy {
+                mode = Self::MODE_SASSY;
+            } else {
+                mode = Self::MODE_NORM;
+            }
             let res = crate::lex::Token::parse(&src, mode);
-            if res.is_none() { return Err(Error::Unknown); }
+            if res.is_none() {
+                return Err(Error::Unknown);
+            }
             res.unwrap()
         };
         let rules = BTreeMap::new();
@@ -133,7 +229,7 @@ impl Resource for Asset {
         let mut block_indent = 0 as u8;
         let mut property = None;
         let mut state = ParseState::default();
-        
+
         let mut index = 0 as usize;
 
         while index < tokens.len() {
@@ -142,16 +238,23 @@ impl Resource for Asset {
             if property.is_some() {
                 let (new_state, _val) = parse(&state, &token, property.as_ref().unwrap());
                 state = new_state;
-                if !state.ok { return Err(Error::InvalidValue); }
-                if state.status == 0x01 { state.status = 0x31; }
+                if !state.ok {
+                    return Err(Error::InvalidValue);
+                }
+                if state.status == 0x01 {
+                    state.status = 0x31;
+                }
                 continue;
             }
             match token.clone() {
                 crate::lex::Token::Identifior(n) => {
                     let i = state.last_tok.identifier();
                     let n = {
-                        if state.status == 2 { ":".to_owned() + n.as_str() }
-                        else { n.clone() }
+                        if state.status == 2 {
+                            ":".to_owned() + n.as_str()
+                        } else {
+                            n.clone()
+                        }
                     };
                     if i.is_some() {
                         let i = i.unwrap();
@@ -167,29 +270,40 @@ impl Resource for Asset {
                 }
                 crate::lex::Token::Indent(i) => {
                     if i == crate::lex::Indent::NewLine {
-                        if state.status == 0x31 { return Err(Error::SyntaxError); }
+                        if state.status == 0x31 {
+                            return Err(Error::SyntaxError);
+                        }
                         state.status = 0x11;
                     }
-                    if !sassy {
+                    if !options.sassy {
                         state.status = 0x0f;
                         continue;
                     }
                 }
                 crate::lex::Token::Other(c) => match c.as_str() {
                     "{" => {
-                        if sassy { return Err(Error::SyntaxError); }
+                        if options.sassy {
+                            return Err(Error::SyntaxError);
+                        }
                         block_indent += 1
                     }
                     "}" => {
-                        if block_indent == 0 || sassy { return Err(Error::SyntaxError); }
+                        if block_indent == 0 || options.sassy {
+                            return Err(Error::SyntaxError);
+                        }
                         block_indent -= 1;
                     }
                     ":" => {
-                        if state.status == 0x11 { state.status = 2; continue; }
+                        if state.status == 0x11 {
+                            state.status = 2;
+                            continue;
+                        }
                         let ident = state.last_tok.identifier();
                         if ident.is_some() {
                             let prop = Property::from_str(ident.unwrap().as_str());
-                            if prop.is_err() { return Err(prop.err().unwrap()); }
+                            if prop.is_err() {
+                                return Err(prop.err().unwrap());
+                            }
                             property = Some(prop.unwrap());
                         }
                     }
@@ -199,10 +313,15 @@ impl Resource for Asset {
             }
             state.last_tok = token.clone();
         }
-        Ok(Self { name: String::from(path.file_name().unwrap().to_string_lossy()), rules })
+        let name = match options.name {
+            super::AssetName::Empty => String::new(),
+            super::AssetName::Str(str) => str,
+            super::AssetName::FileName => return Err(Error::InvalidOption),
+        };
+        Ok(Self { name, rules })
     }
 }
-#[inline]
+#[inline(always)]
 fn parse(state: &ParseState, token: &lex::Token, property: &Property) -> InnerParseOutput {
     match property {
         Property::Background(b) => bg::parse(state, b, token),
