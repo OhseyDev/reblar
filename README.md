@@ -1,13 +1,12 @@
 # reblar
 
-Full-stack web and application development toolkit.
+Front-end web and application development toolkit.
 
 ## Support for
 
 - Markdown
 - SASS/SCSS
-- TypeScript
-- WebAssembly
+- XML
 
 ## Values
 
@@ -21,11 +20,6 @@ Full-stack web and application development toolkit.
 - Compliance validator
 - Basic static web server
 - Versatile preprocessor
-
-### Preprocessor
-
-- Check for safety
-- Upload to CDN
 
 ### Update
 
