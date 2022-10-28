@@ -6,7 +6,7 @@ Front-end web and application development toolkit.
 
 - Markdown
 - SASS/SCSS
-- XML
+- Markup
 
 ## Values
 
