@@ -1,14 +1,10 @@
 [package]
-name = "reblar"
+name = "reblar-exec"
 version = "0.1.0"
-edition = "2021"
 authors = ["Olivia 'Ohsey' Thompson"]
 
-[dependencies.main]
-path = "main"
+[dependencies.reblar-macros]
+path = "macros"
 
-[dependencies.lib]
+[dependencies.reblar]
 path = "lib"
-
-[lib]
-proc-macro = true
