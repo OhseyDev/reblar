@@ -17,15 +17,15 @@ pub enum Color {
     Name(String),
     Transparent,
 }
-impl ToString for Color {
-    fn to_string(&self) -> String {
+impl Display for Color {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::HSL(h, s, l) => format!("hsl({}, {}%, {}%)", h, s, l),
-            Self::HSLA(h, s, l, a) => format!("hsla({}, {}%, {}%, {}%)", h, s, l, a),
-            Self::RGB(r, g, b) => format!("rgb({}, {}, {})", r, g, b),
-            Self::RGBA(r, g, b, a) => format!("rgba({}, {}, {}, {})", r, g, b, a),
-            Self::Name(s) => s.clone(),
-            Self::Transparent => format!("transparent"),
+            Self::HSL(h, s, l) => f.write_str(format!("hsl({}, {}%, {}%)", h, s, l).as_str()),
+            Self::HSLA(h, s, l, a) => f.write_str(format!("hsla({}, {}%, {}%, {}%)", h, s, l, a).as_str()),
+            Self::RGB(r, g, b) => f.write_str(format!("rgb({}, {}, {})", r, g, b).as_str()),
+            Self::RGBA(r, g, b, a) => f.write_str(format!("rgba({}, {}, {}, {})", r, g, b, a).as_str()),
+            Self::Name(s) => f.write_str(s),
+            Self::Transparent => f.write_str(format!("transparent").as_str()),
         }
     }
 }
@@ -34,8 +34,17 @@ pub enum Direction {
     Left,
     Right,
     Bottom,
-    Top,
-    None,
+    Top
+}
+impl Display for Direction {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Left => f.write_str("left"),
+            Self::Right => f.write_str("right"),
+            Self::Top => f.write_str("top"),
+            Self::Bottom => f.write_str("bottom"),
+        }
+    }
 }
 #[derive(Debug, Clone, PartialEq)]
 pub struct BackgroundPosition {
@@ -87,7 +96,7 @@ impl Display for ConicGradient {
             }
         };
         let mut list = String::new();
-        for value in self.values {
+        for value in &self.values {
             if list.is_empty() {
                 list += value.to_string().as_str();
                 continue;
@@ -99,8 +108,21 @@ impl Display for ConicGradient {
 }
 #[derive(Debug, Clone, PartialEq)]
 pub struct LinearGradient {
-    pub directions: [Option<Direction>; 2],
+    pub directions: (Direction, Option<Direction>),
     pub colors: Vec<Color>,
+}
+impl Display for LinearGradient {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let (direction1, direction2) = &self.directions;
+        let mut list = direction1.to_string();
+        if direction2.is_some() {
+            list = format!("{} {}", list, direction2.as_ref().unwrap());
+        }
+        for color in &self.colors {
+            list = format!("{}, {}", list, color);
+        }
+        f.write_str(format!("linear-gradient({})", list).as_str())
+    }
 }
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RadialGradientSize {
@@ -110,16 +132,32 @@ pub enum RadialGradientSize {
     FarthestSide,
 }
 #[derive(Debug, Clone, PartialEq)]
-pub struct RadialGradientValue {
-    pub size: RadialGradientSize,
-    pub position: PositionValue,
-}
-#[derive(Debug, Clone, PartialEq)]
 pub struct RadialGradient {
     pub elipsis: bool,
     pub repeats: bool,
     pub position: PositionValue,
-    pub values: Vec<ConicGradientValue>,
+    pub size: RadialGradientSize,
+    pub colors: Vec<Color>,
+}
+impl Display for RadialGradient {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let fn_name = {
+            if self.repeats {
+                "repeating-radial-gradient"
+            } else {
+                "radial-gradient"
+            }
+        };
+        let mut list = String::new();
+        for color in &self.colors {
+            if list.is_empty() {
+                list += color.to_string().as_str();
+                continue;
+            }
+            list = format!("{}, {}", list, color);
+        }
+        f.write_str(format!("{}({})", fn_name, list).as_str())
+    }
 }
 type PositionValue = (PositionValueType, f64);
 #[derive(Debug, Clone, PartialEq, Copy)]
@@ -350,9 +388,9 @@ impl Into<Value> for BackgroundValue {
 }
 impl ToString for BackgroundValue {
     fn to_string(&self) -> String {
-        match self {
-            &Self::Color(c) => c.to_string(),
-            &Self::Image(i) => i.to_string(),
+        match &self {
+            Self::Color(c) => c.to_string(),
+            Self::Image(i) => i.to_string(),
         }
     }
 }
