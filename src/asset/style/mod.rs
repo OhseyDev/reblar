@@ -23,11 +23,7 @@ pub struct Options {
     pub sassy: bool,
     pub name: super::AssetName,
 }
-#[derive(Debug, Clone)]
-pub enum Property {
-    Background(Option<bg::BackgroundProperty>),
-}
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Value {
     Background(bg::BackgroundValue),
 }
@@ -36,16 +32,7 @@ pub struct Rule {
     property: Property,
     value: Value,
 }
-impl Default for ParseState {
-    fn default() -> Self {
-        ParseState {
-            status: 0x01,
-            ok: true,
-            last_tok: lex::Token::None,
-        }
-    }
-}
-impl crate::traits::PropertyValue for Rule {
+impl crate::traits::PropertyValuePair for Rule {
     type PropertyType = Property;
     type ValueType = Value;
     fn property(&self) -> &Property {
@@ -53,6 +40,15 @@ impl crate::traits::PropertyValue for Rule {
     }
     fn value(&self) -> &Value {
         &self.value
+    }
+}
+impl Default for ParseState {
+    fn default() -> Self {
+        ParseState {
+            status: 0x01,
+            ok: true,
+            last_tok: lex::Token::None,
+        }
     }
 }
 #[derive(Debug)]
@@ -80,6 +76,23 @@ impl Selector {
             name: String::new(),
             parent: None,
         }
+    }
+}
+impl crate::traits::Name for Selector {
+    fn name(&self) -> &String {
+        &self.name
+    }
+}
+impl ToString for Selector {
+    fn to_string(&self) -> String {
+        let mut str = self.name.clone();
+        let mut parent = &self.parent;
+        while self.parent.is_some() {
+            let inuse = parent.as_ref().unwrap();
+            str = inuse.name.clone() + " " + str.as_str();
+            parent = &inuse.parent;
+        }
+        return str;
     }
 }
 impl Options {
@@ -125,21 +138,26 @@ impl crate::traits::Name for Asset {
         &self.name
     }
 }
-impl crate::traits::Name for Selector {
-    fn name(&self) -> &String {
-        &self.name
-    }
+#[derive(Debug, Clone)]
+pub enum Property {
+    Background(Option<bg::BackgroundProperty>),
 }
-impl ToString for Selector {
+
+impl ToString for Property {
     fn to_string(&self) -> String {
-        let mut str = self.name.clone();
-        let mut parent = &self.parent;
-        while self.parent.is_some() {
-            let inuse = parent.as_ref().unwrap();
-            str = inuse.name.clone() + " " + str.as_str();
-            parent = &inuse.parent;
+        match self {
+            Self::Background(b) => match b {
+                Some(bg::BackgroundProperty::Attachment) => String::from("background-attachment"),
+                Some(bg::BackgroundProperty::BlendMode) => String::from("background-blend-mode"),
+                Some(bg::BackgroundProperty::Clip) => String::from("background-clip"),
+                Some(bg::BackgroundProperty::Color) => String::from("background-color"),
+                Some(bg::BackgroundProperty::Image) => String::from("background-image"),
+                Some(bg::BackgroundProperty::Origin) => String::from("background-origin"),
+                Some(bg::BackgroundProperty::Repeat) => String::from("background-repeat"),
+                Some(bg::BackgroundProperty::Size) => String::from("background-size"),
+                _ => String::from("background"),
+            },
         }
-        return str;
     }
 }
 impl FromStr for Property {

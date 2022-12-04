@@ -1,5 +1,7 @@
-pub trait Name { fn name(&self) -> &String; }
-pub trait PropertyValue {
+pub trait Name {
+    fn name(&self) -> &String;
+}
+pub trait PropertyValuePair {
     type PropertyType;
     type ValueType;
     fn property(&self) -> &Self::PropertyType;
@@ -21,7 +23,10 @@ pub trait Builder {
     type Error;
     fn build(&self) -> Result<Self::Resource, Self::Error>;
 }
-pub trait Compliant {
+pub trait CheckCompliance {
     type Suggestions: Iterator;
     fn compliant(&self) -> Option<Self::Suggestions>;
+}
+pub trait IsValid {
+    fn valid(&self) -> bool;
 }

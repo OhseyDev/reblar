@@ -1,8 +1,0 @@
-[package]
-name = "reblar-macros"
-version = "0.1.0"
-authors = ["Olivia 'Ohsey' Thompson"]
-
-[lib]
-proc-macro = true
-path = "lib.rs"

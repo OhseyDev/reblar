@@ -1,7 +1,0 @@
-[package]
-name = "reblar"
-version = "0.1.0"
-authors = ["Olivia 'Ohsey' Thompson"]
-
-[lib]
-path = "lib.rs"

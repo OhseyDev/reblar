@@ -1,3 +1,7 @@
 /target
+/lib/target
+/macros/target
 /Cargo.lock
+/lib/Cargo.lock
+/macros/Cargo.lock
 /.vscode

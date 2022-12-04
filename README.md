@@ -4,7 +4,6 @@ Front-end web and application development toolkit.
 
 ## Support for
 
-- Markdown
 - Stylesheets
 - Markup Documents
 

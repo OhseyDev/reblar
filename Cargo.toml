@@ -3,8 +3,4 @@ name = "reblar-exec"
 version = "0.1.0"
 authors = ["Olivia 'Ohsey' Thompson"]
 
-[dependencies.reblar-macros]
-path = "macros"
-
-[dependencies.reblar]
-path = "lib"
+[dependencies]
