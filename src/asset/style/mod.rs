@@ -1,4 +1,6 @@
-pub mod bg;
+pub mod rules;
+
+use parse_display::{Display, FromStr};
 
 use crate::{lex, traits::Resource};
 use std::{collections::BTreeMap, io::Read, str::FromStr};
@@ -17,6 +19,15 @@ pub(crate) struct ParseState {
     pub ok: bool,
     pub last_tok: lex::Token,
 }
+impl Default for ParseState {
+    fn default() -> Self {
+        ParseState {
+            status: 0x01,
+            ok: true,
+            last_tok: lex::Token::None,
+        }
+    }
+}
 pub(crate) type InnerParseOutput = (ParseState, Option<Value>);
 #[derive(Debug, Clone, PartialEq)]
 pub struct Options {
@@ -25,7 +36,7 @@ pub struct Options {
 }
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
-    Background(bg::BackgroundValue),
+    Background(rules::bg::BackgroundValue),
 }
 #[derive(Debug, Clone)]
 pub struct Rule {
@@ -42,15 +53,6 @@ impl crate::traits::PropertyValuePair for Rule {
         &self.value
     }
 }
-impl Default for ParseState {
-    fn default() -> Self {
-        ParseState {
-            status: 0x01,
-            ok: true,
-            last_tok: lex::Token::None,
-        }
-    }
-}
 #[derive(Debug)]
 pub enum Error {
     IOError(std::io::Error),
@@ -59,11 +61,6 @@ pub enum Error {
     InvalidProperty,
     InvalidOption,
     Unknown,
-}
-#[derive(Debug, Clone)]
-pub struct Asset {
-    name: String,
-    rules: BTreeMap<Selector, Vec<Rule>>,
 }
 #[derive(Debug, Clone)]
 pub struct Selector {
@@ -94,6 +91,11 @@ impl ToString for Selector {
         }
         return str;
     }
+}
+#[derive(Debug, Clone, Display, FromStr)]
+pub enum Property {
+    #[display("{0}")]
+    Background(rules::bg::BackgroundProperty),
 }
 impl Options {
     pub fn sassy() -> Options {
@@ -133,52 +135,14 @@ impl Options {
         }
     }
 }
+#[derive(Debug, Clone)]
+pub struct Asset {
+    name: String,
+    rules: BTreeMap<Selector, Vec<Rule>>,
+}
 impl crate::traits::Name for Asset {
     fn name(&self) -> &String {
         &self.name
-    }
-}
-#[derive(Debug, Clone)]
-pub enum Property {
-    Background(Option<bg::BackgroundProperty>),
-}
-
-impl ToString for Property {
-    fn to_string(&self) -> String {
-        match self {
-            Self::Background(b) => match b {
-                Some(bg::BackgroundProperty::Attachment) => String::from("background-attachment"),
-                Some(bg::BackgroundProperty::BlendMode) => String::from("background-blend-mode"),
-                Some(bg::BackgroundProperty::Clip) => String::from("background-clip"),
-                Some(bg::BackgroundProperty::Color) => String::from("background-color"),
-                Some(bg::BackgroundProperty::Image) => String::from("background-image"),
-                Some(bg::BackgroundProperty::Origin) => String::from("background-origin"),
-                Some(bg::BackgroundProperty::Repeat) => String::from("background-repeat"),
-                Some(bg::BackgroundProperty::Size) => String::from("background-size"),
-                _ => String::from("background"),
-            },
-        }
-    }
-}
-impl FromStr for Property {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Property, Self::Err> {
-        match s {
-            "background" => Ok(Self::Background(None)),
-            "background-attachment" => {
-                Ok(Self::Background(Some(bg::BackgroundProperty::Attachment)))
-            }
-            "background-blend-mode" => {
-                Ok(Self::Background(Some(bg::BackgroundProperty::BlendMode)))
-            }
-            "background-clip" => Ok(Self::Background(Some(bg::BackgroundProperty::Clip))),
-            "background-color" => Ok(Self::Background(Some(bg::BackgroundProperty::Color))),
-            "background-image" => Ok(Self::Background(Some(bg::BackgroundProperty::Image))),
-            "background-origin" => Ok(Self::Background(Some(bg::BackgroundProperty::Origin))),
-            "background-repeat" => Ok(Self::Background(Some(bg::BackgroundProperty::Repeat))),
-            "background-size" => Ok(Self::Background(Some(bg::BackgroundProperty::Size))),
-            _ => Err(Error::InvalidProperty),
-        }
     }
 }
 impl Asset {
@@ -320,7 +284,7 @@ impl Resource for Asset {
                         if ident.is_some() {
                             let prop = Property::from_str(ident.unwrap().as_str());
                             if prop.is_err() {
-                                return Err(prop.err().unwrap());
+                                return Err(Error::InvalidProperty);
                             }
                             property = Some(prop.unwrap());
                         }
@@ -342,6 +306,6 @@ impl Resource for Asset {
 #[inline(always)]
 fn parse(state: &ParseState, token: &lex::Token, property: &Property) -> InnerParseOutput {
     match property {
-        Property::Background(b) => bg::parse(state, b, token),
+        Property::Background(b) => rules::bg::parse(state, b, token),
     }
 }

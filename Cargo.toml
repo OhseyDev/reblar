@@ -4,3 +4,5 @@ version = "0.1.0"
 authors = ["Olivia 'Ohsey' Thompson"]
 
 [dependencies]
+derive_builder = "0.12.0"
+parse-display = "0.6.0"
