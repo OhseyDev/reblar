@@ -19,3 +19,5 @@ Front-end web and application development toolkit.
 - Compliance validator
 - Basic static web server
 - Versatile preprocessor
+
+All of the functionality is still work-in-progress and will be for a long time to come.
