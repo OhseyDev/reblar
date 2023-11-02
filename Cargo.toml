@@ -1,8 +1,6 @@
 [package]
-name = "reblar-exec"
+name = "reblar"
 version = "0.1.0"
-authors = ["Olivia 'Ohsey' Thompson"]
+authors = ["Ohsey"]
 
 [dependencies]
-derive_builder = "0.12.0"
-parse-display = "0.6.0"
