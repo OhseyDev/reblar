@@ -1,3 +1,7 @@
+pub enum Source {
+    File(Box<std::path::Path>),
+    Memory(*mut u8)
+}
 pub trait Named {
     fn name() -> String;
 }
@@ -7,15 +11,18 @@ pub trait PropertyValuePair {
     fn property(&self) -> &Self::PropertyType;
     fn value(&self) -> &Self::ValueType;
 }
-pub trait Resource: Named + Sized {
-    type Error;
-    type Options;
-    type Source;
-    fn file(path: &std::path::Path, options: Self::Options) -> Result<Self, Self::Error>;
-    fn src(src: &Self::Source, options: Self::Options) -> Result<Self, Self::Error>;
+pub trait Resource {
+    type Data;
+    fn data(&mut self) -> &mut Self::Data;
 }
 pub trait Builder {
     type Resource: Resource;
     type Error;
-    fn build(&self) -> Result<Self::Resource, Self::Error>;
+    type Source;
+    fn build(&self, src: &Self::Source) -> Result<Self::Resource, Self::Error>;
+}
+pub trait FramedResource: Resource {
+    fn dimensions(&self) -> (usize, usize);
+    fn width(&self) -> usize;
+    fn height(&self) -> usize;
 }
