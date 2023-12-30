@@ -26,3 +26,7 @@ pub trait FramedResource: Resource {
     fn width(&self) -> usize;
     fn height(&self) -> usize;
 }
+pub trait SequencedResource: Resource {
+    fn duration(&self) -> usize;
+}
+
