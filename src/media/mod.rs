@@ -17,7 +17,7 @@ pub struct RawData();
 
 pub struct Frame {
     data: Vec<u8>,
-    dim: (usize,usize),
+    dim: (u32,u32),
 }
 
 pub struct Image {
@@ -32,9 +32,9 @@ impl<'a> crate::traits::Resource for Image {
 }
 
 impl<'a> crate::traits::FramedResource for Image {
-    fn dimensions(&self) -> (usize, usize) { self.frame.dimensions() }
-    fn width(&self) -> usize { self.frame.width() }
-    fn height(&self) -> usize { self.frame.height() }
+    fn dimensions(&self) -> (u32,u32) { self.frame.dimensions() }
+    fn width(&self) -> u32 { self.frame.width() }
+    fn height(&self) -> u32 { self.frame.height() }
 }
 
 impl crate::traits::Resource for Frame {
@@ -43,9 +43,9 @@ impl crate::traits::Resource for Frame {
 }
 
 impl crate::traits::FramedResource for Frame {
-    fn dimensions(&self) -> (usize, usize) { self.dim }
-    fn width(&self) -> usize { self.dim.0 }
-    fn height(&self) -> usize { self.dim.1 }
+    fn dimensions(&self) -> (u32,u32) { self.dim }
+    fn width(&self) -> u32 { self.dim.0 }
+    fn height(&self) -> u32 { self.dim.1 }
 }
 
 impl std::convert::From<std::io::Error> for Error {

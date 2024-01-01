@@ -1,7 +1,3 @@
-pub enum Source {
-    File(Box<std::path::Path>),
-    Memory(*mut u8)
-}
 pub trait Named {
     fn name() -> String;
 }
@@ -22,11 +18,11 @@ pub trait Builder {
     fn build(&self, src: &Self::Source) -> Result<Self::Resource, Self::Error>;
 }
 pub trait FramedResource: Resource {
-    fn dimensions(&self) -> (usize, usize);
-    fn width(&self) -> usize;
-    fn height(&self) -> usize;
+    fn dimensions(&self) -> (u32, u32);
+    fn width(&self) -> u32;
+    fn height(&self) -> u32;
 }
 pub trait SequencedResource: Resource {
-    fn duration(&self) -> usize;
+    fn duration(&self) -> u32;
 }
 

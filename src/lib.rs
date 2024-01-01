@@ -1,6 +1,11 @@
 pub mod traits;
 pub mod media;
 
+pub enum Source {
+    File(std::path::PathBuf),
+    Memory(Vec<u8>)
+}
+
 #[macro_export]
 macro_rules! return_err {
     ( $res_returning_op:expr ) => {
