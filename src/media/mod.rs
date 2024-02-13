@@ -1,8 +1,8 @@
 
 #[cfg(feature = "png")]
 pub mod png;
-// #[cfg(feature = "jpeg")]
-// pub mod jpeg;
+#[cfg(feature = "jpeg")]
+pub mod jpeg;
 
 pub enum Error {
     IO(std::io::Error),

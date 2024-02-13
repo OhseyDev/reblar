@@ -2,5 +2,9 @@
 
 Framework for manipulating media programmatically.
 
-## Support for
- - ???
+## Planned functionality
+ - Image importing & exporting
+ - Audio importing & exporting
+ - Video importing & exporting
+
+
