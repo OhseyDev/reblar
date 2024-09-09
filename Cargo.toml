@@ -13,7 +13,7 @@ bmp = { version = "0.5.0", optional = true }
 svg = { version = "0.14.0", optional = true }
 
 [features]
-default = ["png"]
+default = ["png", "jpeg"]
 png = ["dep:png"]
 jpeg = ["dep:jpeg-decoder","dep:jpeg-encoder"]
 gif = ["dep:gif"]

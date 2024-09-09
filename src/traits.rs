@@ -25,4 +25,3 @@ pub trait FramedResource: Resource {
 pub trait SequencedResource: Resource {
     fn duration(&self) -> u32;
 }
-
